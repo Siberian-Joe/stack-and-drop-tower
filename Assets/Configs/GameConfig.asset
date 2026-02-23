@@ -15,8 +15,43 @@ MonoBehaviour:
   bottomBar:
     _count: 20
     _colors:
-    - _id: Black
-      _color:
-        serializedVersion: 2
-        rgba: 0
-      _localizationKey: Black
+    - _id: Ruby
+      _sprite: {fileID: 21300000, guid: 19005b65b81fa7f4886bb0725b4403a0, type: 3}
+    - _id: Scarlet
+      _sprite: {fileID: 21300000, guid: 45018bed20abf9941836942681d562e9, type: 3}
+    - _id: Tangerine
+      _sprite: {fileID: 21300000, guid: b55dfd557e38f2849b77011e72659bc7, type: 3}
+    - _id: Gold
+      _sprite: {fileID: 21300000, guid: f8ce319f4bde3204592e945630cfdce2, type: 3}
+    - _id: Emerald
+      _sprite: {fileID: 21300000, guid: a40948c40c864b449a0bf6421c9d4e56, type: 3}
+    - _id: Azure
+      _sprite: {fileID: 21300000, guid: 05abb4ceedf2ef4448a3cc6f48fb0e77, type: 3}
+    - _id: Indigo
+      _sprite: {fileID: 21300000, guid: 07b4fdc188c35d94b8e9690a3d993837, type: 3}
+    - _id: Orchid
+      _sprite: {fileID: 21300000, guid: 93fd06ce96ead7e4ba3b30fa5821ad27, type: 3}
+    - _id: Silver
+      _sprite: {fileID: 21300000, guid: 32d54ea1bf5b43e4486de4fbc6d23734, type: 3}
+    - _id: Chestnut
+      _sprite: {fileID: 21300000, guid: a6ba44bcc7ba193449973bacf6866920, type: 3}
+    - _id: Graphite
+      _sprite: {fileID: 21300000, guid: 62b4ff252a328b745a4f3876ba2557c6, type: 3}
+    - _id: Plum
+      _sprite: {fileID: 21300000, guid: 12efed51da4a24149a8f5544a2cc9b69, type: 3}
+    - _id: Fuchsia
+      _sprite: {fileID: 21300000, guid: f63da4680e969ef4cb6fbd85a9051abd, type: 3}
+    - _id: Turquoise
+      _sprite: {fileID: 21300000, guid: 5ee95e1dd8d37aa42899b407c8640a6e, type: 3}
+    - _id: Lime
+      _sprite: {fileID: 21300000, guid: 583d1550b9d8f2b47981167e2158dbb5, type: 3}
+    - _id: Lavender
+      _sprite: {fileID: 21300000, guid: 4896fff4d20562d458c5538c50ddbdcb, type: 3}
+    - _id: Aquamarine
+      _sprite: {fileID: 21300000, guid: c827c97533b149d4ba40c8f2c8704a75, type: 3}
+    - _id: Brick
+      _sprite: {fileID: 21300000, guid: 14a521dd6f3e09346b24856efea52e5f, type: 3}
+    - _id: Vanilla
+      _sprite: {fileID: 21300000, guid: 5ba38f91bf6df99408e972711af0412c, type: 3}
+    - _id: Lilac
+      _sprite: {fileID: 21300000, guid: 85d5e279934def64eb36d7d4aff1b471, type: 3}

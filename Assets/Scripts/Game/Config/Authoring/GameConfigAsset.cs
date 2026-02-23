@@ -31,12 +31,10 @@ namespace Game.Config.Authoring
         private sealed class CubeColorDefinition : ICubeColorDefinition
         {
             [SerializeField] private string _id;
-            [SerializeField] private Color32 _color = new(255, 255, 255, 255);
-            [SerializeField] private string _localizationKey;
+            [SerializeField] private Sprite _sprite;
 
             public string Id => _id;
-            public Color32 Color => _color;
-            public string localizationKey => _localizationKey;
+            public Sprite Sprite => _sprite;
         }
     }
 }

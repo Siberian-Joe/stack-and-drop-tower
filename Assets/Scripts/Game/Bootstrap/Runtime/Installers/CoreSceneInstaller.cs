@@ -5,12 +5,16 @@ using Game.SceneReady.Contracts;
 using Game.SceneReady.Runtime;
 using Game.Startup.Contracts;
 using Game.Startup.Runtime;
+using Game.UI.BottomBar.Runtime;
+using UnityEngine;
 using Zenject;
 
 namespace Game.Bootstrap.Runtime.Installers
 {
     public sealed class CoreSceneInstaller : MonoInstaller
     {
+        [SerializeField] private BottomBarView _bottomBarView;
+
         public override void InstallBindings()
         {
             Container
@@ -38,6 +42,14 @@ namespace Game.Bootstrap.Runtime.Installers
 
             Container
                 .BindInterfacesTo<StartupRunner<ISceneStartup, ISceneLifetime>>()
+                .AsSingle();
+
+            Container
+                .BindInstance(_bottomBarView)
+                .AsSingle();
+
+            Container
+                .BindInterfacesAndSelfTo<InitBottomBarTask>()
                 .AsSingle();
         }
     }
