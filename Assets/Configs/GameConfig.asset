@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37feb90fa4434959afc9e0dd4d44d307, type: 3}
   m_Name: GameConfig
   m_EditorClassIdentifier: 
-  bottomBar:
+  _bottomBar:
     _count: 20
     _colors:
     - _id: Ruby
@@ -55,3 +55,19 @@ MonoBehaviour:
       _sprite: {fileID: 21300000, guid: 5ba38f91bf6df99408e972711af0412c, type: 3}
     - _id: Lilac
       _sprite: {fileID: 21300000, guid: 85d5e279934def64eb36d7d4aff1b471, type: 3}
+    _actions:
+    - _id: drop_to_hole
+      _locKey: drop_to_hole
+      _order: 0
+      _enabled: 1
+    - _id: place_to_tower
+      _locKey: place_to_tower
+      _order: 0
+      _enabled: 1
+    - _id: fail_drop
+      _locKey: fail_drop
+      _order: 0
+      _enabled: 1
+    _placementRules:
+      _maxXOffsetFactor: 0.5
+      _requireSameColorAsTop: 0

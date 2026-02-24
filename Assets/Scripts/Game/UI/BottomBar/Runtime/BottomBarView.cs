@@ -1,50 +1,32 @@
 ﻿using Game.Config.Contracts;
+using Game.UI.BottomBar.Contracts;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Game.UI.BottomBar.Runtime
 {
     public sealed class BottomBarView : MonoBehaviour
     {
+        [SerializeField] private ScrollRect _scrollRect;
         [SerializeField] private RectTransform _contentRoot;
-        [SerializeField] private BottomBarCubeView _cubePrefab;
+        [SerializeField] private CubeView _cubePrefab;
 
-        public void Build(IBottomBarConfigDefinition config)
+        public void Build(IBottomBarConfigDefinition config, ICubeDragInteractor dragInteractor)
         {
-            if (config == null)
-            {
-                Debug.LogError("BottomBar config is null");
-                return;
-            }
-
-            if (_contentRoot == false)
-            {
-                Debug.LogError("ContentRoot is null");
-                return;
-            }
-
-            if (_cubePrefab == false)
-            {
-                Debug.LogError("CubePrefab is null");
-                return;
-            }
-
-            if (config.Colors == null || config.Colors.Count == 0)
-            {
-                Debug.LogError("No cube colors");
-                return;
-            }
-
             for (var i = _contentRoot.childCount - 1; i >= 0; i--)
                 Destroy(_contentRoot.GetChild(i).gameObject);
 
             var colors = config.Colors;
+            if (colors == null || colors.Count == 0)
+                return;
 
             for (var i = 0; i < config.Count; i++)
             {
-                var definition = colors[i % colors.Count];
+                var def = colors[i % colors.Count];
 
                 var cube = Instantiate(_cubePrefab, _contentRoot);
-                cube.Bind(definition);
+                cube.Bind(def);
+                cube.Setup(dragInteractor, _scrollRect);
             }
         }
     }

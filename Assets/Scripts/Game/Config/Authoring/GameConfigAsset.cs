@@ -9,9 +9,9 @@ namespace Game.Config.Authoring
     [CreateAssetMenu(menuName = "Game/Config/GameConfig", fileName = "GameConfig")]
     public sealed class GameConfigAsset : ScriptableObject, IGameConfigDefinition
     {
-        [SerializeField] private BottomBarConfigDefinition bottomBar = new();
+        [SerializeField] private BottomBarConfigDefinition _bottomBar = new();
 
-        public IBottomBarConfigDefinition BottomBar => bottomBar;
+        public IBottomBarConfigDefinition BottomBar => _bottomBar;
 
         [Serializable]
         private sealed class BottomBarConfigDefinition : IBottomBarConfigDefinition
