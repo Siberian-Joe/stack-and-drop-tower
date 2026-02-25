@@ -55,19 +55,16 @@ MonoBehaviour:
       _sprite: {fileID: 21300000, guid: 5ba38f91bf6df99408e972711af0412c, type: 3}
     - _id: Lilac
       _sprite: {fileID: 21300000, guid: 85d5e279934def64eb36d7d4aff1b471, type: 3}
-    _actions:
-    - _id: drop_to_hole
-      _locKey: drop_to_hole
-      _order: 0
-      _enabled: 1
-    - _id: place_to_tower
-      _locKey: place_to_tower
-      _order: 0
-      _enabled: 1
-    - _id: fail_drop
-      _locKey: fail_drop
-      _order: 0
-      _enabled: 1
-    _placementRules:
-      _maxXOffsetFactor: 0.5
-      _requireSameColorAsTop: 0
+  _cubeDrag:
+    _maxXOffsetFactor: 0.5
+    _towerFallDuration: 0.25
+    _towerFallEase: 26
+    _holeEllipsePadding: 0.9
+    _holePullDuration: 0.12
+    _holePullEase: 6
+    _holeFallDuration: 0.25
+    _holeFallEase: 5
+    _holeFallExtra: 60
+    _failFallDuration: 0.35
+    _failFallEase: 5
+    _failFallExtra: 80

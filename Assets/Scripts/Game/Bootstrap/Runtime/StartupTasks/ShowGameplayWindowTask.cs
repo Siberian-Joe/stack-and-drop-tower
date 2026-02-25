@@ -2,6 +2,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Startup.Contracts;
 using Game.UI.Screens.Contracts;
+using Game.UI.Screens.Runtime.Views;
 
 namespace Game.Bootstrap.Runtime.StartupTasks
 {
@@ -10,12 +11,15 @@ namespace Game.Bootstrap.Runtime.StartupTasks
         public string Name => "Show Gameplay Window";
         public int Order => 0;
 
-        private readonly IGameplayWindowContext _gameplayWindow;
+        private readonly IPanelService _panelService;
 
-        public ShowGameplayWindowTask(IGameplayWindowContext gameplayWindow) =>
-            _gameplayWindow = gameplayWindow;
+        public ShowGameplayWindowTask(IPanelService panelService) =>
+            _panelService = panelService;
 
-        public UniTask ExecuteAsync(CancellationToken token) =>
-            _gameplayWindow.EnsureLoadedAndOpenedAsync(token);
+        public async UniTask ExecuteAsync(CancellationToken token)
+        {
+            var handle = await _panelService.LoadAsync<GameplayWindowView>(token);
+            handle.Open();
+        }
     }
 }

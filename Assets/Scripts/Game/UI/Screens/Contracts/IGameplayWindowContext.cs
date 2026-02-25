@@ -1,6 +1,4 @@
-﻿using System.Threading;
-using Cysharp.Threading.Tasks;
-using DG.Tweening;
+﻿using DG.Tweening;
 using Game.UI.BottomBar.Runtime;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,8 +7,6 @@ namespace Game.UI.Screens.Contracts
 {
     public interface IGameplayWindowContext
     {
-        UniTask EnsureLoadedAndOpenedAsync(CancellationToken token);
-
         BottomBarView BottomBarView { get; }
 
         ScrollRect ScrollRect { get; }

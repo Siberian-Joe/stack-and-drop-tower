@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Startup.Contracts;
+using UnityEngine;
 
 namespace Game.Startup.Runtime
 {
@@ -20,7 +22,14 @@ namespace Game.Startup.Runtime
             foreach (var task in _tasks)
             {
                 token.ThrowIfCancellationRequested();
-                await task.ExecuteAsync(token);
+                try
+                {
+                    await task.ExecuteAsync(token);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                }
             }
         }
     }
