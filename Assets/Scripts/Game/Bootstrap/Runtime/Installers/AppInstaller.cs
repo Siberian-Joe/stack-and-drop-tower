@@ -1,10 +1,12 @@
-﻿using Cysharp.Threading.Tasks;
+﻿﻿using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Runtime.StartupTasks;
 using Game.Config.Authoring;
 using Game.Config.Contracts;
 using Game.Config.Runtime;
 using Game.Lifetime.Contracts;
 using Game.Lifetime.Runtime;
+using Game.Progress.Contracts;
+using Game.Progress.Runtime;
 using Game.Scenes.Authoring;
 using Game.Scenes.Contracts;
 using Game.Scenes.Runtime;
@@ -57,6 +59,15 @@ namespace Game.Bootstrap.Runtime.Installers
                 .AsSingle();
 
             Container
+                .BindInterfacesTo<ProgressStore>()
+                .AsSingle();
+
+            Container
+                .Bind<IProgressRepository>()
+                .To<JsonFileProgressRepository>()
+                .AsSingle();
+
+            Container
                 .Bind<StartupPipeline<IAppStartupTask>>()
                 .AsSingle();
 
@@ -72,6 +83,11 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .Bind<IAppStartupTask>()
                 .To<LoadGameConfigTask>()
+                .AsSingle();
+
+            Container
+                .Bind<IAppStartupTask>()
+                .To<LoadProgressTask>()
                 .AsSingle();
 
             Container

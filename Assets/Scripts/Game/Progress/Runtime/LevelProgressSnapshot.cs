@@ -1,6 +1,6 @@
 ﻿namespace Game.Progress.Runtime
 {
-    public sealed class LevelProgressSnapshot
+    public readonly struct LevelProgressSnapshot
     {
         public int CompletedLevels { get; }
         public int CurrentLevelIndex { get; }

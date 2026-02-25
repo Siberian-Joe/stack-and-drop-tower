@@ -11,7 +11,12 @@ namespace Game.UI.BottomBar.Runtime
         [SerializeField] private RectTransform _contentRoot;
         [SerializeField] private CubeView _cubePrefab;
 
-        public void Build(IBottomBarConfigDefinition config, ICubeDragInteractor dragInteractor)
+        public CubeView CubePrefab => _cubePrefab;
+
+        public void Build(
+            IBottomBarConfigDefinition config,
+            ICubeDragInteractor dragInteractor,
+            ICubeViewFactory cubeFactory)
         {
             for (var i = _contentRoot.childCount - 1; i >= 0; i--)
                 Destroy(_contentRoot.GetChild(i).gameObject);
@@ -24,8 +29,16 @@ namespace Game.UI.BottomBar.Runtime
             {
                 var def = colors[i % colors.Count];
 
-                var cube = Instantiate(_cubePrefab, _contentRoot);
-                cube.Bind(def);
+                var cube = cubeFactory != null
+                    ? cubeFactory.Create(def, _contentRoot)
+                    : Instantiate(_cubePrefab, _contentRoot);
+
+                if (cube == null)
+                    continue;
+
+                if (cubeFactory == null)
+                    cube.Bind(def);
+
                 cube.Setup(dragInteractor, _scrollRect);
             }
         }

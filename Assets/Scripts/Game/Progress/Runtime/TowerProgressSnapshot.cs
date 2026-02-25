@@ -1,15 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Game.Progress.Runtime
 {
-    public sealed class TowerProgressSnapshot
+    public readonly struct TowerProgressSnapshot
     {
-        private readonly IReadOnlyList<CubePlacementSnapshot> _cubes;
-        public IReadOnlyList<CubePlacementSnapshot> Cubes => _cubes;
+        public IReadOnlyList<CubePlacementSnapshot> Cubes { get; }
 
-        public TowerProgressSnapshot(IReadOnlyList<CubePlacementSnapshot> cubes)
-        {
-            _cubes = cubes;
-        }
+        public TowerProgressSnapshot(IReadOnlyList<CubePlacementSnapshot> cubes) =>
+            Cubes = cubes ?? Array.Empty<CubePlacementSnapshot>();
     }
 }

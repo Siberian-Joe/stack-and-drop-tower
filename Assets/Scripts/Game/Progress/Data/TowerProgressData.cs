@@ -6,6 +6,6 @@ namespace Game.Progress.Data
     [Serializable]
     public sealed class TowerProgressData
     {
-        public List<CubePlacementData> cubes = new();
+        public List<CubePlacementData> Cubes = new();
     }
 }

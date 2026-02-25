@@ -3,7 +3,6 @@ using System.Linq;
 using DG.Tweening;
 using Game.UI.BottomBar.Contracts;
 using UnityEngine;
-using UnityEngine.UI;
 using Zenject;
 
 namespace Game.UI.BottomBar.Runtime
@@ -14,20 +13,22 @@ namespace Game.UI.BottomBar.Runtime
         private readonly BottomBarDragSession _session;
         private readonly ITowerPlacementRulesEvaluator _placementRules;
         private readonly ITowerStackState _towerStack;
+        private readonly ICubeViewFactory _cubeFactory;
         private readonly IReadOnlyList<IDropActionHandler> _dropActionHandlers;
 
-        [Inject]
         public BottomBarDragInteractor(
             BottomBarDragDropRefs refs,
             BottomBarDragSession session,
             ITowerPlacementRulesEvaluator placementRules,
             ITowerStackState towerStack,
+            ICubeViewFactory cubeFactory,
             List<IDropActionHandler> dropActionHandlers)
         {
             _refs = refs;
             _session = session;
             _placementRules = placementRules;
             _towerStack = towerStack;
+            _cubeFactory = cubeFactory;
             _dropActionHandlers = dropActionHandlers
                 .OrderBy(x => x.Priority)
                 .ToArray();
@@ -107,13 +108,18 @@ namespace Game.UI.BottomBar.Runtime
         {
             _session.Origin = BottomBarDragOrigin.BottomBarClone;
 
-            var clone = Object.Instantiate(source.gameObject, _refs.DragLayer);
+            var cloneView = _cubeFactory.Clone(source, _refs.DragLayer);
+            if (cloneView == null)
+            {
+                ResetAfterFailedBegin();
+                return;
+            }
+
+            var clone = cloneView.gameObject;
             var dragRect = (RectTransform)clone.transform;
             dragRect.SetAsLastSibling();
 
-            var cloneView = clone.GetComponent<CubeView>();
-            if (cloneView != null)
-                cloneView.enabled = false;
+            cloneView.enabled = false;
 
             BottomBarDragVisualUtility.NormalizeRectForDrag(dragRect, sourceRt);
             BottomBarDragVisualUtility.SetGraphicRaycasts(clone, false);

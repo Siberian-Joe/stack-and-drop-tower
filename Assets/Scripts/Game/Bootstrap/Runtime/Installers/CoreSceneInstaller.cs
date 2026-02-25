@@ -1,6 +1,8 @@
-﻿using Cysharp.Threading.Tasks;
-using Game.Lifetime.Contracts;
+﻿﻿using Cysharp.Threading.Tasks;
+ using Game.Bootstrap.Runtime.StartupTasks;
+ using Game.Lifetime.Contracts;
 using Game.Lifetime.Runtime;
+using Game.Progress.Runtime.Listeners;
 using Game.SceneReady.Contracts;
 using Game.SceneReady.Runtime;
 using Game.Startup.Contracts;
@@ -50,17 +52,26 @@ namespace Game.Bootstrap.Runtime.Installers
                 .BindInstance(_bottomBarView)
                 .AsSingle();
 
-            Container.BindInstance(_bottomBarDragDropRefs).AsSingle();
+            Container
+                .BindInstance(_bottomBarDragDropRefs)
+                .AsSingle();
 
-            Container.Bind<BottomBarDragSession>().AsSingle();
+            Container
+                .Bind<BottomBarDragSession>()
+                .AsSingle();
 
-            Container.Bind<ICubeDragInteractor>()
+            Container
+                .Bind<ICubeViewFactory>()
+                .To<CubeViewFactory>()
+                .AsSingle();
+
+            Container
+                .Bind<ICubeDragInteractor>()
                 .To<BottomBarDragInteractor>()
                 .AsSingle();
 
             Container
-                .Bind<ITowerStackState>()
-                .To<TowerStackState>()
+                .BindInterfacesTo<TowerStackState>()
                 .AsSingle();
 
             Container
@@ -104,7 +115,20 @@ namespace Game.Bootstrap.Runtime.Installers
                 .AsSingle();
 
             Container
+                .BindInterfacesTo<TowerProgressToStoreBridge>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<AutoSaveListener>()
+                .AsSingle();
+
+            Container
                 .BindInterfacesAndSelfTo<InitBottomBarTask>()
+                .AsSingle();
+
+            Container
+                .Bind<ISceneStartupTask>()
+                .To<RestoreTowerProgressTask>()
                 .AsSingle();
         }
     }

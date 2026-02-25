@@ -47,7 +47,7 @@ namespace Game.Progress.Runtime
         public async UniTask SaveAsync(GameProgressSnapshot progress, CancellationToken token)
         {
             var data = GameProgressMapping.ToData(progress);
-            data.schemaVersion = CurrentSchema;
+            data.SchemaVersion = CurrentSchema;
 
             var json = JsonUtility.ToJson(data);
 

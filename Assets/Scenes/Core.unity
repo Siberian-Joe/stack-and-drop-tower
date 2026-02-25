@@ -1056,9 +1056,9 @@ MonoBehaviour:
   _maxXOffsetFactor: 0.5
   _fallDuration: 0.25
   _fallEase: 6
-  _holeArea: {fileID: 0}
-  _holeMaskRoot: {fileID: 0}
-  _holeMouth: {fileID: 0}
+  _holeArea: {fileID: 525665364}
+  _holeMaskRoot: {fileID: 525665364}
+  _holeMouth: {fileID: 525665364}
   _holeEllipsePadding: 0.9
   _holePullDuration: 0.12
   _holePullEase: 6

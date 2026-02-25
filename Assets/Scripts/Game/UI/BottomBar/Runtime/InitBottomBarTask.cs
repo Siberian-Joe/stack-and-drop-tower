@@ -14,20 +14,23 @@ namespace Game.UI.BottomBar.Runtime
         private readonly IGameConfigReader _config;
         private readonly BottomBarView _view;
         private readonly ICubeDragInteractor _dragInteractor;
+        private readonly ICubeViewFactory _cubeFactory;
 
         public InitBottomBarTask(
             IGameConfigReader config,
             BottomBarView view,
-            ICubeDragInteractor dragInteractor)
+            ICubeDragInteractor dragInteractor,
+            ICubeViewFactory cubeFactory)
         {
             _config = config;
             _view = view;
             _dragInteractor = dragInteractor;
+            _cubeFactory = cubeFactory;
         }
 
         public UniTask ExecuteAsync(CancellationToken token)
         {
-            _view.Build(_config.Current.BottomBar, _dragInteractor);
+            _view.Build(_config.Current.BottomBar, _dragInteractor, _cubeFactory);
             return UniTask.CompletedTask;
         }
     }
