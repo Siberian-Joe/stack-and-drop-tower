@@ -30,7 +30,7 @@ namespace Game.UI.BottomBar.Runtime
         public bool TryExecute()
         {
             var dragRect = _session.DragRect;
-            if (_refs.TowerDropArea == null || _refs.TowerRoot == null || dragRect == null)
+            if (_refs.TowerRoot == false || dragRect == false)
                 return false;
 
             if (_towerStack == null || _placementRules == null)
@@ -38,32 +38,31 @@ namespace Game.UI.BottomBar.Runtime
 
             var cam = _refs.UiCamera;
 
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _refs.TowerRoot, _session.LastScreenPoint, cam, out var pointerLocal))
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_refs.TowerRoot, _session.LastScreenPoint, cam,
+                    out var pointerLocal) == false)
             {
                 return false;
             }
 
             var dropPivotPos = pointerLocal - _session.GrabLocalInSource;
 
-            dragRect.SetParent(_refs.TowerRoot, worldPositionStays: false);
+            dragRect.SetParent(_refs.TowerRoot, false);
             dragRect.anchorMin = dragRect.anchorMax = new Vector2(0.5f, 0.5f);
             dragRect.localRotation = Quaternion.identity;
             dragRect.localScale = Vector3.one;
             dragRect.anchoredPosition = dropPivotPos;
 
-            var w = dragRect.rect.width;
-            var h = dragRect.rect.height;
+            var width = dragRect.rect.width;
+            var height = dragRect.rect.height;
 
             var context = new TowerPlacementRuleContext(
                 screenPoint: _session.LastScreenPoint,
                 desiredPivotPos: dropPivotPos,
-                towerDropArea: _refs.TowerDropArea,
                 towerRoot: _refs.TowerRoot,
                 uiCamera: cam,
                 draggedColorId: _session.DraggedColorId,
-                cubeWidth: w,
-                cubeHeight: h,
+                cubeWidth: width,
+                cubeHeight: height,
                 cubePivot: dragRect.pivot,
                 isManualPlacement: true,
                 requirePointerBeAboveTop: true,
@@ -71,20 +70,20 @@ namespace Game.UI.BottomBar.Runtime
                 stack: _towerStack);
 
             var ruleResult = _placementRules.Evaluate(context);
-            if (!ruleResult.IsSuccess)
+            if (ruleResult.IsSuccess == false)
             {
                 _session.LastPlacementFailureKey = ruleResult.FailureLocalizationKey;
                 return false;
             }
 
-            if (!TowerPlacementGeometry.TryComputeTarget(context, out var target))
+            if (TowerPlacementGeometry.TryComputeTarget(context, out var target) == false)
             {
                 _session.LastPlacementFailureKey = "bottom_bar.rule.cube_does_not_fit";
                 return false;
             }
 
             var start = target;
-            var minFall = h * 0.75f;
+            var minFall = height * 0.75f;
             start.y = Mathf.Max(dropPivotPos.y, target.y + minFall);
             start.x = target.x;
 
@@ -95,11 +94,11 @@ namespace Game.UI.BottomBar.Runtime
                 .SetEase(_refs.FallEase);
 
             _towerStack.Add(new TowerCubeState(
-                colorId: _session.DraggedColorId,
-                rect: dragRect,
-                target: target,
-                width: w,
-                height: h));
+                _session.DraggedColorId,
+                dragRect,
+                target,
+                width,
+                height));
 
             return true;
         }

@@ -176,7 +176,6 @@ namespace Game.UI.BottomBar.Runtime
             var context = new TowerPlacementRuleContext(
                 screenPoint: default,
                 desiredPivotPos: cube.Target,
-                towerDropArea: _refs.TowerDropArea,
                 towerRoot: _refs.TowerRoot,
                 uiCamera: _refs.UiCamera,
                 draggedColorId: cube.ColorId,

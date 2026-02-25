@@ -7,7 +7,6 @@ namespace Game.UI.BottomBar.Contracts
         public Vector2 ScreenPoint { get; }
         public Vector2 DesiredPivotPos { get; }
 
-        public RectTransform TowerDropArea { get; }
         public RectTransform TowerRoot { get; }
         public Camera UiCamera { get; }
 
@@ -26,7 +25,6 @@ namespace Game.UI.BottomBar.Contracts
         public TowerPlacementRuleContext(
             Vector2 screenPoint,
             Vector2 desiredPivotPos,
-            RectTransform towerDropArea,
             RectTransform towerRoot,
             Camera uiCamera,
             string draggedColorId,
@@ -40,7 +38,6 @@ namespace Game.UI.BottomBar.Contracts
         {
             ScreenPoint = screenPoint;
             DesiredPivotPos = desiredPivotPos;
-            TowerDropArea = towerDropArea;
             TowerRoot = towerRoot;
             UiCamera = uiCamera;
             DraggedColorId = draggedColorId ?? string.Empty;

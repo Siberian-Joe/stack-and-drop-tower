@@ -12,7 +12,6 @@ namespace Game.UI.BottomBar.Runtime
         [SerializeField] private Canvas _canvas;
 
         [Header("Tower")]
-        [SerializeField] private RectTransform _towerDropArea;
         [SerializeField] private RectTransform _towerRoot;
         [SerializeField, Range(0.1f, 1f)] private float _maxXOffsetFactor = 0.5f;
         [SerializeField, Min(0.01f)] private float _fallDuration = 0.25f;
@@ -38,7 +37,6 @@ namespace Game.UI.BottomBar.Runtime
         public RectTransform DragLayer => _dragLayer;
         public Canvas Canvas => _canvas;
 
-        public RectTransform TowerDropArea => _towerDropArea;
         public RectTransform TowerRoot => _towerRoot;
         public float MaxXOffsetFactor => _maxXOffsetFactor;
         public float FallDuration => _fallDuration;

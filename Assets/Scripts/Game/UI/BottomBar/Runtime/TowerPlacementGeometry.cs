@@ -38,11 +38,7 @@ namespace Game.UI.BottomBar.Runtime
                 context.CubeHeight,
                 context.CubePivot);
 
-            // Если не влез по высоте
-            if (!Mathf.Approximately(target.y, y))
-                return false;
-
-            return true;
+            return Mathf.Approximately(target.y, y);
         }
 
         private static Vector2 ClampPivotInsideRect(Vector2 pivotPos, Rect area, float w, float h, Vector2 pivot)
