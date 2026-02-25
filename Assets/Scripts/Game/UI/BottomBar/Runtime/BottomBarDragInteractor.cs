@@ -30,13 +30,13 @@ namespace Game.UI.BottomBar.Runtime
             _towerStack = towerStack;
             _cubeFactory = cubeFactory;
             _dropActionHandlers = dropActionHandlers
-                .OrderBy(x => x.Priority)
+                .OrderBy(handler => handler.Priority)
                 .ToArray();
         }
 
         public void BeginDrag(CubeView source, int pointerId, Vector2 screenPoint)
         {
-            if (_session.IsDragging || source == null)
+            if (_session.IsDragging || source == false)
                 return;
 
             _session.ActivePointerId = pointerId;
@@ -69,13 +69,13 @@ namespace Game.UI.BottomBar.Runtime
 
         public void Move(Vector2 screenPoint)
         {
-            if (!_session.IsDragging)
+            if (_session.IsDragging == false)
                 return;
 
             _session.LastScreenPoint = screenPoint;
 
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _gameplayWindow.DragLayer, screenPoint, _gameplayWindow.UiCamera, out var pointerLocal))
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.DragLayer, screenPoint,
+                    _gameplayWindow.UiCamera, out var pointerLocal))
             {
                 _session.DragRect.anchoredPosition = pointerLocal - _session.GrabLocalInSource;
             }
@@ -88,14 +88,10 @@ namespace Game.UI.BottomBar.Runtime
 
             try
             {
-                foreach (var handler in _dropActionHandlers)
-                {
-                    if (handler.TryExecute())
-                    {
-                        PromoteDraggedCubeToTowerIfNeeded();
-                        return;
-                    }
-                }
+                if (_dropActionHandlers.Any(handler => handler.TryExecute()) == false)
+                    return;
+
+                PromoteDraggedCubeToTowerIfNeeded();
             }
             finally
             {
@@ -109,7 +105,7 @@ namespace Game.UI.BottomBar.Runtime
             _session.Origin = BottomBarDragOrigin.BottomBarClone;
 
             var cloneView = _cubeFactory.Clone(source, _gameplayWindow.DragLayer);
-            if (cloneView == null)
+            if (cloneView == false)
             {
                 ResetAfterFailedBegin();
                 return;
@@ -162,13 +158,21 @@ namespace Game.UI.BottomBar.Runtime
 
             var above = _towerStack.ExtractAtAndRemoveAbove(extractedIndex, out _);
 
+            if (extractedIndex == 0)
+            {
+                foreach (var cube in above)
+                    PlayFailCollapseAndDestroy(cube);
+
+                return;
+            }
+
             foreach (var cube in above)
                 RevalidateAndCollapseCube(cube);
         }
 
         private void RevalidateAndCollapseCube(TowerCubeState cube)
         {
-            if (cube.Rect == null || _towerStack == null || _placementRules == null)
+            if (cube.Rect == false || _towerStack == null || _placementRules == null)
                 return;
 
             cube.Rect.DOKill();
@@ -188,13 +192,8 @@ namespace Game.UI.BottomBar.Runtime
                 stack: _towerStack);
 
             var ruleResult = _placementRules.Evaluate(context);
-            if (!ruleResult.IsSuccess)
-            {
-                PlayFailFallAndDestroy(cube.Rect.gameObject, cube.Rect);
-                return;
-            }
-
-            if (!TowerPlacementGeometry.TryComputeTarget(context, out var newTarget))
+            if (ruleResult.IsSuccess == false ||
+                TowerPlacementGeometry.TryComputeTarget(context, out var newTarget) == false)
             {
                 PlayFailFallAndDestroy(cube.Rect.gameObject, cube.Rect);
                 return;
@@ -209,7 +208,8 @@ namespace Game.UI.BottomBar.Runtime
 
             cube.Rect
                 .DOAnchorPos(newTarget, _gameplayWindow.FallDuration)
-                .SetEase(_gameplayWindow.FallEase);
+                .SetEase(_gameplayWindow.FallEase)
+                .SetLink(cube.Rect.gameObject);
 
             _towerStack.Add(cube.WithTarget(newTarget));
         }
@@ -217,7 +217,7 @@ namespace Game.UI.BottomBar.Runtime
         private void ReparentDraggedRectToDragLayer(Vector2 screenPoint)
         {
             var dragRect = _session.DragRect;
-            if (dragRect == null || _gameplayWindow.DragLayer == null)
+            if (dragRect == false || _gameplayWindow.DragLayer == false)
                 return;
 
             dragRect.SetParent(_gameplayWindow.DragLayer, worldPositionStays: false);
@@ -238,7 +238,7 @@ namespace Game.UI.BottomBar.Runtime
             var dragObject = _session.DragObject;
             var dragRect = _session.DragRect;
 
-            if (dragObject == null || dragRect == null || _gameplayWindow.TowerRoot == null)
+            if (dragObject == false || dragRect == false || _gameplayWindow.TowerRoot == false)
                 return;
 
             if (!dragRect.IsChildOf(_gameplayWindow.TowerRoot))
@@ -247,16 +247,16 @@ namespace Game.UI.BottomBar.Runtime
             BottomBarDragVisualUtility.SetGraphicRaycasts(dragObject, true);
 
             var cubeView = dragObject.GetComponent<CubeView>();
-            if (cubeView != null)
-            {
-                cubeView.enabled = true;
-                cubeView.Setup(this, null);
-            }
+            if (cubeView == false)
+                return;
+
+            cubeView.enabled = true;
+            cubeView.Setup(this);
         }
 
         private void PlayFailFallAndDestroy(GameObject obj, RectTransform rect)
         {
-            if (obj == null || rect == null || _gameplayWindow.DragLayer == null)
+            if (obj == false || rect == false || _gameplayWindow.DragLayer == false)
                 return;
 
             var cam = _gameplayWindow.UiCamera;
@@ -280,13 +280,13 @@ namespace Game.UI.BottomBar.Runtime
                 .SetEase(_gameplayWindow.FailFallEase)
                 .OnComplete(() =>
                 {
-                    if (obj != null)
+                    if (obj)
                         Object.Destroy(obj);
                 });
         }
 
-        private bool IsTowerCube(RectTransform rect)
-            => rect != null && _gameplayWindow.TowerRoot != null && rect.IsChildOf(_gameplayWindow.TowerRoot);
+        private bool IsTowerCube(RectTransform rect) =>
+            rect && _gameplayWindow.TowerRoot && rect.IsChildOf(_gameplayWindow.TowerRoot);
 
         private void ResetAfterFailedBegin()
         {
@@ -296,15 +296,33 @@ namespace Game.UI.BottomBar.Runtime
 
         private void LockScroll()
         {
-            if (_gameplayWindow.ScrollRect == null) return;
+            if (_gameplayWindow.ScrollRect == false)
+                return;
+
             _gameplayWindow.ScrollRect.StopMovement();
             _gameplayWindow.ScrollRect.enabled = false;
         }
 
         private void UnlockScroll()
         {
-            if (_gameplayWindow.ScrollRect == null) return;
+            if (_gameplayWindow.ScrollRect == false)
+                return;
+
             _gameplayWindow.ScrollRect.enabled = true;
+        }
+        
+        private void PlayFailCollapseAndDestroy(in TowerCubeState cube)
+        {
+            if (cube.Rect == false)
+                return;
+
+            var obj = cube.Rect.gameObject;
+            if (obj == false)
+                return;
+
+            BottomBarDragVisualUtility.SetGraphicRaycasts(obj, false);
+
+            PlayFailFallAndDestroy(obj, cube.Rect);
         }
     }
 }

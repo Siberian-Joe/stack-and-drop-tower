@@ -22,7 +22,7 @@ namespace Game.UI.BottomBar.Runtime
 
         public static void SetGraphicRaycasts(GameObject target, bool enabled)
         {
-            if (target == null)
+            if (target == false)
                 return;
 
             foreach (var graphic in target.GetComponentsInChildren<Graphic>(true))
