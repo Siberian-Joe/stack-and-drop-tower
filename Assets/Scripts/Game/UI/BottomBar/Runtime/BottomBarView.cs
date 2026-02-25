@@ -11,6 +11,7 @@ namespace Game.UI.BottomBar.Runtime
         [SerializeField] private RectTransform _contentRoot;
         [SerializeField] private CubeView _cubePrefab;
 
+        public ScrollRect ScrollRect => _scrollRect;
         public CubeView CubePrefab => _cubePrefab;
 
         public void Build(

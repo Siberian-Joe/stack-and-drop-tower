@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Game.UI.BottomBar.Contracts;
+using Game.UI.Screens.Contracts;
 using UnityEngine;
 
 namespace Game.UI.BottomBar.Runtime
@@ -8,14 +9,14 @@ namespace Game.UI.BottomBar.Runtime
     {
         public int Priority => 10_000;
 
-        private readonly BottomBarDragDropRefs _refs;
+        private readonly IGameplayWindowContext _gameplayWindow;
         private readonly BottomBarDragSession _session;
 
         public FailDropActionHandler(
-            BottomBarDragDropRefs refs,
+            IGameplayWindowContext gameplayWindow,
             BottomBarDragSession session)
         {
-            _refs = refs;
+            _gameplayWindow = gameplayWindow;
             _session = session;
         }
 
@@ -24,7 +25,7 @@ namespace Game.UI.BottomBar.Runtime
             var obj = _session.DragObject;
             var rect = _session.DragRect;
 
-            if (obj == null || rect == null || _refs.DragLayer == null)
+            if (obj == null || rect == null || _gameplayWindow.DragLayer == null)
                 return false;
 
             PlayFailFallAndDestroy(obj, rect);
@@ -33,24 +34,24 @@ namespace Game.UI.BottomBar.Runtime
 
         private void PlayFailFallAndDestroy(GameObject obj, RectTransform rect)
         {
-            var cam = _refs.UiCamera;
+            var cam = _gameplayWindow.UiCamera;
             var screen = RectTransformUtility.WorldToScreenPoint(cam, rect.position);
 
-            rect.SetParent(_refs.DragLayer, worldPositionStays: false);
+            rect.SetParent(_gameplayWindow.DragLayer, worldPositionStays: false);
             rect.SetAsLastSibling();
 
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_refs.DragLayer, screen, cam, out var local);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.DragLayer, screen, cam, out var local);
             rect.anchoredPosition = local;
 
-            var endY = _refs.DragLayer.rect.yMin - rect.rect.height - _refs.FailFallExtra;
+            var endY = _gameplayWindow.DragLayer.rect.yMin - rect.rect.height - _gameplayWindow.FailFallExtra;
 
             rect.DOKill();
-            rect.DOAnchorPosY(endY, _refs.FailFallDuration)
-                .SetEase(_refs.FailFallEase)
+            rect.DOAnchorPosY(endY, _gameplayWindow.FailFallDuration)
+                .SetEase(_gameplayWindow.FailFallEase)
                 .OnComplete(() =>
                 {
                     if (obj != null)

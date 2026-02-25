@@ -82,3 +82,5 @@ MonoBehaviour:
     m_SubObjectType: 
     m_EditorAssetChanged: 0
   _sceneCatalog: {fileID: 11400000, guid: 27964df0dc0e8e3409c15b2c53d8cfc6, type: 2}
+  _screenRootsPrefab: {fileID: 3872098525106948721, guid: 9820144b301bdc94aadce38e4203f592, type: 3}
+  _screenCatalog: {fileID: 11400000, guid: 43c86c5b7e2d86d499228a3c7383ac60, type: 2}

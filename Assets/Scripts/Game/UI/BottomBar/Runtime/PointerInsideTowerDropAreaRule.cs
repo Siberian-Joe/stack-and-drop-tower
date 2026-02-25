@@ -1,4 +1,5 @@
 ﻿using Game.UI.BottomBar.Contracts;
+using Game.UI.Screens.Contracts;
 using UnityEngine;
 
 namespace Game.UI.BottomBar.Runtime
@@ -7,12 +8,12 @@ namespace Game.UI.BottomBar.Runtime
     {
         public int Order => 100;
 
-        private readonly BottomBarDragDropRefs _refs;
+        private readonly IGameplayWindowContext _windowContext;
         private readonly Vector3[] _corners = new Vector3[4];
 
         private const float ScreenPaddingPx = 2f;
 
-        public PointerInsideTowerDropAreaRule(BottomBarDragDropRefs refs) => _refs = refs;
+        public PointerInsideTowerDropAreaRule(IGameplayWindowContext windowContext) => _windowContext = windowContext;
 
         public PlacementRuleResult Evaluate(in TowerPlacementRuleContext context)
         {
@@ -53,13 +54,13 @@ namespace Game.UI.BottomBar.Runtime
 
         private RectTransform GetBottomPanelRect()
         {
-            if (_refs == false || _refs.ScrollRect == false)
+            if (_windowContext == null || _windowContext.ScrollRect == false)
                 return null;
 
-            if (_refs.ScrollRect.viewport)
-                return _refs.ScrollRect.viewport;
+            if (_windowContext.ScrollRect.viewport)
+                return _windowContext.ScrollRect.viewport;
 
-            return _refs.ScrollRect.transform as RectTransform;
+            return _windowContext.ScrollRect.transform as RectTransform;
         }
 
         private static bool TryGetCubeScreenRect(in TowerPlacementRuleContext context, out Rect screenRect)

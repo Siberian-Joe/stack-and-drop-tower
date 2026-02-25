@@ -4,8 +4,9 @@ using Game.Progress.Contracts;
 using Game.Startup.Contracts;
 using Game.UI.BottomBar.Contracts;
 using Game.UI.BottomBar.Runtime;
+using Game.UI.Screens.Contracts;
+using Game.UI.Screens.Runtime;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Game.Bootstrap.Runtime.StartupTasks
 {
@@ -15,20 +16,20 @@ namespace Game.Bootstrap.Runtime.StartupTasks
         public int Order => 20;
 
         private readonly IProgressReader _progress;
-        private readonly BottomBarDragDropRefs _refs;
+        private readonly IGameplayWindowContext _gameplayWindow;
         private readonly ITowerStackState _towerStack;
         private readonly ICubeDragInteractor _dragInteractor;
         private readonly ICubeViewFactory _cubeFactory;
 
         public RestoreTowerProgressTask(
             IProgressReader progress,
-            BottomBarDragDropRefs refs,
+            IGameplayWindowContext gameplayWindow,
             ITowerStackState towerStack,
             ICubeDragInteractor dragInteractor,
             ICubeViewFactory cubeFactory)
         {
             _progress = progress;
-            _refs = refs;
+            _gameplayWindow = gameplayWindow;
             _towerStack = towerStack;
             _dragInteractor = dragInteractor;
             _cubeFactory = cubeFactory;
@@ -36,27 +37,27 @@ namespace Game.Bootstrap.Runtime.StartupTasks
 
         public UniTask ExecuteAsync(CancellationToken token)
         {
-            if (_refs.TowerRoot == false)
+            var towerRoot = _gameplayWindow.TowerRoot;
+            if (towerRoot == false)
                 return UniTask.CompletedTask;
 
             var cubes = _progress.Current.Tower.Cubes;
             if (cubes == null || cubes.Count == 0)
                 return UniTask.CompletedTask;
 
-            for (var i = 0; i < cubes.Count; i++)
+            foreach (var snapshot in cubes)
             {
                 token.ThrowIfCancellationRequested();
 
-                var snapshot = cubes[i];
-                var cube = _cubeFactory.CreateByColorId(snapshot.ColorId, _refs.TowerRoot);
-                if (cube == null)
+                var cube = _cubeFactory.CreateByColorId(snapshot.ColorId, towerRoot);
+                if (cube == false)
                     continue;
 
                 cube.enabled = true;
                 cube.Setup(_dragInteractor);
 
                 var rect = (RectTransform)cube.transform;
-                rect.SetParent(_refs.TowerRoot, false);
+                rect.SetParent(towerRoot, false);
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
                 rect.localScale = Vector3.one;
                 rect.localRotation = snapshot.LocalRotation;

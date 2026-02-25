@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using Game.UI.BottomBar.Contracts;
+using Game.UI.Screens.Contracts;
 using UnityEngine;
 using Zenject;
 
@@ -9,19 +10,18 @@ namespace Game.UI.BottomBar.Runtime
     {
         public int Priority => 200;
 
-        private readonly BottomBarDragDropRefs _refs;
+        private readonly IGameplayWindowContext _windowContext;
         private readonly BottomBarDragSession _session;
         private readonly ITowerPlacementRulesEvaluator _placementRules;
         private readonly ITowerStackState _towerStack;
 
-        [Inject]
         public PlaceIntoTowerActionHandler(
-            BottomBarDragDropRefs refs,
+            IGameplayWindowContext windowContext,
             BottomBarDragSession session,
             ITowerPlacementRulesEvaluator placementRules,
             ITowerStackState towerStack)
         {
-            _refs = refs;
+            _windowContext = windowContext;
             _session = session;
             _placementRules = placementRules;
             _towerStack = towerStack;
@@ -30,15 +30,15 @@ namespace Game.UI.BottomBar.Runtime
         public bool TryExecute()
         {
             var dragRect = _session.DragRect;
-            if (_refs.TowerRoot == false || dragRect == false)
+            if (_windowContext.TowerRoot == false || dragRect == false)
                 return false;
 
             if (_towerStack == null || _placementRules == null)
                 return false;
 
-            var cam = _refs.UiCamera;
+            var cam = _windowContext.UiCamera;
 
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_refs.TowerRoot, _session.LastScreenPoint, cam,
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_windowContext.TowerRoot, _session.LastScreenPoint, cam,
                     out var pointerLocal) == false)
             {
                 return false;
@@ -46,7 +46,7 @@ namespace Game.UI.BottomBar.Runtime
 
             var dropPivotPos = pointerLocal - _session.GrabLocalInSource;
 
-            dragRect.SetParent(_refs.TowerRoot, false);
+            dragRect.SetParent(_windowContext.TowerRoot, false);
             dragRect.anchorMin = dragRect.anchorMax = new Vector2(0.5f, 0.5f);
             dragRect.localRotation = Quaternion.identity;
             dragRect.localScale = Vector3.one;
@@ -58,7 +58,7 @@ namespace Game.UI.BottomBar.Runtime
             var context = new TowerPlacementRuleContext(
                 screenPoint: _session.LastScreenPoint,
                 desiredPivotPos: dropPivotPos,
-                towerRoot: _refs.TowerRoot,
+                towerRoot: _windowContext.TowerRoot,
                 uiCamera: cam,
                 draggedColorId: _session.DraggedColorId,
                 cubeWidth: width,
@@ -66,7 +66,7 @@ namespace Game.UI.BottomBar.Runtime
                 cubePivot: dragRect.pivot,
                 isManualPlacement: true,
                 requirePointerBeAboveTop: true,
-                maxXOffsetFactor: _refs.MaxXOffsetFactor,
+                maxXOffsetFactor: _windowContext.MaxXOffsetFactor,
                 stack: _towerStack);
 
             var ruleResult = _placementRules.Evaluate(context);
@@ -90,8 +90,8 @@ namespace Game.UI.BottomBar.Runtime
             dragRect.DOKill();
             dragRect.anchoredPosition = start;
             dragRect
-                .DOAnchorPos(target, _refs.FallDuration)
-                .SetEase(_refs.FallEase);
+                .DOAnchorPos(target, _windowContext.FallDuration)
+                .SetEase(_windowContext.FallEase);
 
             _towerStack.Add(new TowerCubeState(
                 _session.DraggedColorId,

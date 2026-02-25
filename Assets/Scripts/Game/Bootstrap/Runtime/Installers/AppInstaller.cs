@@ -1,4 +1,5 @@
-﻿﻿using Cysharp.Threading.Tasks;
+﻿using System;
+using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Runtime.StartupTasks;
 using Game.Config.Authoring;
 using Game.Config.Contracts;
@@ -12,6 +13,8 @@ using Game.Scenes.Contracts;
 using Game.Scenes.Runtime;
 using Game.Startup.Contracts;
 using Game.Startup.Runtime;
+using Game.UI.Screens.Contracts;
+using Game.UI.Screens.Runtime;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Zenject;
@@ -23,6 +26,9 @@ namespace Game.Bootstrap.Runtime.Installers
         [Header("Config")] [SerializeField] private AssetReferenceT<GameConfigAsset> _gameConfig;
 
         [Header("Scenes")] [SerializeField] private SceneCatalog _sceneCatalog;
+
+        [Header("Screens")] [SerializeField] private ScreenRoots _screenRootsPrefab;
+        [SerializeField] private ScreenCatalog _screenCatalog;
 
         public override void InstallBindings()
         {
@@ -54,6 +60,11 @@ namespace Game.Bootstrap.Runtime.Installers
                 .AsSingle();
 
             Container
+                .Bind<ISceneTransitionCurtain>()
+                .To<SceneTransitionCurtain>()
+                .AsSingle();
+
+            Container
                 .Bind<ISceneNavigator>()
                 .To<AddressablesSceneNavigator>()
                 .AsSingle();
@@ -81,18 +92,41 @@ namespace Game.Bootstrap.Runtime.Installers
                 .AsSingle();
 
             Container
-                .Bind<IAppStartupTask>()
-                .To<LoadGameConfigTask>()
+                .BindInterfacesTo<LoadGameConfigTask>()
                 .AsSingle();
 
             Container
-                .Bind<IAppStartupTask>()
-                .To<LoadProgressTask>()
+                .BindInterfacesTo<LoadProgressTask>()
                 .AsSingle();
 
             Container
-                .Bind<IAppStartupTask>()
-                .To<SwitchToCoreSceneTask>()
+                .BindInterfacesTo<SwitchToCoreSceneTask>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<ShowLoadingOverlayTask>()
+                .AsSingle();
+
+            Container
+                .Bind<ScreenRoots>()
+                .FromInstance(_screenRootsPrefab)
+                .WhenInjectedInto<SpawnPersistentScreenRootsTask>();
+
+            Container
+                .BindInterfacesAndSelfTo<ScreenRootsRegistry>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<SpawnPersistentScreenRootsTask>()
+                .AsSingle();
+
+            Container
+                .Bind<IScreenCatalog>()
+                .FromInstance(_screenCatalog)
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<AddressablesPanelService>()
                 .AsSingle();
         }
     }

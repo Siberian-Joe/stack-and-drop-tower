@@ -1,6 +1,7 @@
-﻿﻿using Cysharp.Threading.Tasks;
- using Game.Bootstrap.Runtime.StartupTasks;
- using Game.Lifetime.Contracts;
+﻿using Cysharp.Threading.Tasks;
+using Game.Bootstrap.Runtime.SceneReady;
+using Game.Bootstrap.Runtime.StartupTasks;
+using Game.Lifetime.Contracts;
 using Game.Lifetime.Runtime;
 using Game.Progress.Runtime.Listeners;
 using Game.SceneReady.Contracts;
@@ -9,16 +10,13 @@ using Game.Startup.Contracts;
 using Game.Startup.Runtime;
 using Game.UI.BottomBar.Contracts;
 using Game.UI.BottomBar.Runtime;
-using UnityEngine;
+using Game.UI.Screens.Runtime;
 using Zenject;
 
 namespace Game.Bootstrap.Runtime.Installers
 {
     public sealed class CoreSceneInstaller : MonoInstaller
     {
-        [SerializeField] private BottomBarView _bottomBarView;
-        [SerializeField] private BottomBarDragDropRefs _bottomBarDragDropRefs;
-
         public override void InstallBindings()
         {
             Container
@@ -47,13 +45,9 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .BindInterfacesTo<StartupRunner<ISceneStartup, ISceneLifetime>>()
                 .AsSingle();
-
+            
             Container
-                .BindInstance(_bottomBarView)
-                .AsSingle();
-
-            Container
-                .BindInstance(_bottomBarDragDropRefs)
+                .BindInterfacesTo<GameplayWindowContext>()
                 .AsSingle();
 
             Container
@@ -123,12 +117,21 @@ namespace Game.Bootstrap.Runtime.Installers
                 .AsSingle();
 
             Container
+                .Bind<ISceneReadyListener>()
+                .To<CloseLoadingOverlayOnSceneReadyListener>()
+                .AsSingle();
+
+            Container
                 .BindInterfacesAndSelfTo<InitBottomBarTask>()
                 .AsSingle();
 
             Container
                 .Bind<ISceneStartupTask>()
                 .To<RestoreTowerProgressTask>()
+                .AsSingle();
+            
+            Container
+                .BindInterfacesTo<ShowGameplayWindowTask>()
                 .AsSingle();
         }
     }

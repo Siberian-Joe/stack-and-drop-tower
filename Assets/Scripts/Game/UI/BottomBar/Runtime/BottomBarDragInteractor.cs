@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using Game.UI.BottomBar.Contracts;
+using Game.UI.Screens.Contracts;
 using UnityEngine;
-using Zenject;
 
 namespace Game.UI.BottomBar.Runtime
 {
     public sealed class BottomBarDragInteractor : ICubeDragInteractor
     {
-        private readonly BottomBarDragDropRefs _refs;
+        private readonly IGameplayWindowContext _gameplayWindow;
         private readonly BottomBarDragSession _session;
         private readonly ITowerPlacementRulesEvaluator _placementRules;
         private readonly ITowerStackState _towerStack;
@@ -17,14 +17,14 @@ namespace Game.UI.BottomBar.Runtime
         private readonly IReadOnlyList<IDropActionHandler> _dropActionHandlers;
 
         public BottomBarDragInteractor(
-            BottomBarDragDropRefs refs,
+            IGameplayWindowContext gameplayWindow,
             BottomBarDragSession session,
             ITowerPlacementRulesEvaluator placementRules,
             ITowerStackState towerStack,
             ICubeViewFactory cubeFactory,
             List<IDropActionHandler> dropActionHandlers)
         {
-            _refs = refs;
+            _gameplayWindow = gameplayWindow;
             _session = session;
             _placementRules = placementRules;
             _towerStack = towerStack;
@@ -48,7 +48,7 @@ namespace Game.UI.BottomBar.Runtime
             LockScroll();
 
             var sourceRt = (RectTransform)source.transform;
-            var cam = _refs.UiCamera;
+            var cam = _gameplayWindow.UiCamera;
 
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 sourceRt, screenPoint, cam, out var grabLocal);
@@ -75,7 +75,7 @@ namespace Game.UI.BottomBar.Runtime
             _session.LastScreenPoint = screenPoint;
 
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _refs.DragLayer, screenPoint, _refs.UiCamera, out var pointerLocal))
+                    _gameplayWindow.DragLayer, screenPoint, _gameplayWindow.UiCamera, out var pointerLocal))
             {
                 _session.DragRect.anchoredPosition = pointerLocal - _session.GrabLocalInSource;
             }
@@ -108,7 +108,7 @@ namespace Game.UI.BottomBar.Runtime
         {
             _session.Origin = BottomBarDragOrigin.BottomBarClone;
 
-            var cloneView = _cubeFactory.Clone(source, _refs.DragLayer);
+            var cloneView = _cubeFactory.Clone(source, _gameplayWindow.DragLayer);
             if (cloneView == null)
             {
                 ResetAfterFailedBegin();
@@ -125,7 +125,7 @@ namespace Game.UI.BottomBar.Runtime
             BottomBarDragVisualUtility.SetGraphicRaycasts(clone, false);
 
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                _refs.DragLayer, screenPoint, _refs.UiCamera, out var pointerLocal);
+                _gameplayWindow.DragLayer, screenPoint, _gameplayWindow.UiCamera, out var pointerLocal);
 
             dragRect.anchoredPosition = pointerLocal - _session.GrabLocalInSource;
 
@@ -176,15 +176,15 @@ namespace Game.UI.BottomBar.Runtime
             var context = new TowerPlacementRuleContext(
                 screenPoint: default,
                 desiredPivotPos: cube.Target,
-                towerRoot: _refs.TowerRoot,
-                uiCamera: _refs.UiCamera,
+                towerRoot: _gameplayWindow.TowerRoot,
+                uiCamera: _gameplayWindow.UiCamera,
                 draggedColorId: cube.ColorId,
                 cubeWidth: cube.Width,
                 cubeHeight: cube.Height,
                 cubePivot: cube.Rect.pivot,
                 isManualPlacement: false,
                 requirePointerBeAboveTop: false,
-                maxXOffsetFactor: _refs.MaxXOffsetFactor,
+                maxXOffsetFactor: _gameplayWindow.MaxXOffsetFactor,
                 stack: _towerStack);
 
             var ruleResult = _placementRules.Evaluate(context);
@@ -208,8 +208,8 @@ namespace Game.UI.BottomBar.Runtime
             }
 
             cube.Rect
-                .DOAnchorPos(newTarget, _refs.FallDuration)
-                .SetEase(_refs.FallEase);
+                .DOAnchorPos(newTarget, _gameplayWindow.FallDuration)
+                .SetEase(_gameplayWindow.FallEase);
 
             _towerStack.Add(cube.WithTarget(newTarget));
         }
@@ -217,10 +217,10 @@ namespace Game.UI.BottomBar.Runtime
         private void ReparentDraggedRectToDragLayer(Vector2 screenPoint)
         {
             var dragRect = _session.DragRect;
-            if (dragRect == null || _refs.DragLayer == null)
+            if (dragRect == null || _gameplayWindow.DragLayer == null)
                 return;
 
-            dragRect.SetParent(_refs.DragLayer, worldPositionStays: false);
+            dragRect.SetParent(_gameplayWindow.DragLayer, worldPositionStays: false);
             dragRect.SetAsLastSibling();
 
             dragRect.anchorMin = dragRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -228,7 +228,7 @@ namespace Game.UI.BottomBar.Runtime
             dragRect.localScale = Vector3.one;
 
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                _refs.DragLayer, screenPoint, _refs.UiCamera, out var pointerLocal);
+                _gameplayWindow.DragLayer, screenPoint, _gameplayWindow.UiCamera, out var pointerLocal);
 
             dragRect.anchoredPosition = pointerLocal - _session.GrabLocalInSource;
         }
@@ -238,10 +238,10 @@ namespace Game.UI.BottomBar.Runtime
             var dragObject = _session.DragObject;
             var dragRect = _session.DragRect;
 
-            if (dragObject == null || dragRect == null || _refs.TowerRoot == null)
+            if (dragObject == null || dragRect == null || _gameplayWindow.TowerRoot == null)
                 return;
 
-            if (!dragRect.IsChildOf(_refs.TowerRoot))
+            if (!dragRect.IsChildOf(_gameplayWindow.TowerRoot))
                 return;
 
             BottomBarDragVisualUtility.SetGraphicRaycasts(dragObject, true);
@@ -250,33 +250,34 @@ namespace Game.UI.BottomBar.Runtime
             if (cubeView != null)
             {
                 cubeView.enabled = true;
-                cubeView.Setup(this, null); // tower mode
+                cubeView.Setup(this, null);
             }
         }
 
         private void PlayFailFallAndDestroy(GameObject obj, RectTransform rect)
         {
-            if (obj == null || rect == null || _refs.DragLayer == null)
+            if (obj == null || rect == null || _gameplayWindow.DragLayer == null)
                 return;
 
-            var cam = _refs.UiCamera;
+            var cam = _gameplayWindow.UiCamera;
             var screen = RectTransformUtility.WorldToScreenPoint(cam, rect.position);
 
-            rect.SetParent(_refs.DragLayer, worldPositionStays: false);
+            rect.SetParent(_gameplayWindow.DragLayer, worldPositionStays: false);
             rect.SetAsLastSibling();
 
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_refs.DragLayer, screen, cam, out var local);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.DragLayer, screen, cam,
+                out var local);
             rect.anchoredPosition = local;
 
-            var endY = _refs.DragLayer.rect.yMin - rect.rect.height - _refs.FailFallExtra;
+            var endY = _gameplayWindow.DragLayer.rect.yMin - rect.rect.height - _gameplayWindow.FailFallExtra;
 
             rect.DOKill();
-            rect.DOAnchorPosY(endY, _refs.FailFallDuration)
-                .SetEase(_refs.FailFallEase)
+            rect.DOAnchorPosY(endY, _gameplayWindow.FailFallDuration)
+                .SetEase(_gameplayWindow.FailFallEase)
                 .OnComplete(() =>
                 {
                     if (obj != null)
@@ -285,7 +286,7 @@ namespace Game.UI.BottomBar.Runtime
         }
 
         private bool IsTowerCube(RectTransform rect)
-            => rect != null && _refs.TowerRoot != null && rect.IsChildOf(_refs.TowerRoot);
+            => rect != null && _gameplayWindow.TowerRoot != null && rect.IsChildOf(_gameplayWindow.TowerRoot);
 
         private void ResetAfterFailedBegin()
         {
@@ -295,15 +296,15 @@ namespace Game.UI.BottomBar.Runtime
 
         private void LockScroll()
         {
-            if (_refs.ScrollRect == null) return;
-            _refs.ScrollRect.StopMovement();
-            _refs.ScrollRect.enabled = false;
+            if (_gameplayWindow.ScrollRect == null) return;
+            _gameplayWindow.ScrollRect.StopMovement();
+            _gameplayWindow.ScrollRect.enabled = false;
         }
 
         private void UnlockScroll()
         {
-            if (_refs.ScrollRect == null) return;
-            _refs.ScrollRect.enabled = true;
+            if (_gameplayWindow.ScrollRect == null) return;
+            _gameplayWindow.ScrollRect.enabled = true;
         }
     }
 }

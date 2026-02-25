@@ -1,8 +1,10 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.Config.Contracts;
 using Game.Startup.Contracts;
 using Game.UI.BottomBar.Contracts;
+using Game.UI.Screens.Contracts;
 
 namespace Game.UI.BottomBar.Runtime
 {
@@ -12,25 +14,29 @@ namespace Game.UI.BottomBar.Runtime
         public int Order => 10;
 
         private readonly IGameConfigReader _config;
-        private readonly BottomBarView _view;
+        private readonly IGameplayWindowContext _gameplayWindow;
         private readonly ICubeDragInteractor _dragInteractor;
         private readonly ICubeViewFactory _cubeFactory;
 
         public InitBottomBarTask(
             IGameConfigReader config,
-            BottomBarView view,
+            IGameplayWindowContext gameplayWindow,
             ICubeDragInteractor dragInteractor,
             ICubeViewFactory cubeFactory)
         {
             _config = config;
-            _view = view;
+            _gameplayWindow = gameplayWindow;
             _dragInteractor = dragInteractor;
             _cubeFactory = cubeFactory;
         }
 
         public UniTask ExecuteAsync(CancellationToken token)
         {
-            _view.Build(_config.Current.BottomBar, _dragInteractor, _cubeFactory);
+            var view = _gameplayWindow.BottomBarView;
+            if (view == null)
+                throw new InvalidOperationException("GameplayWindow.BottomBar is not assigned");
+
+            view.Build(_config.Current.BottomBar, _dragInteractor, _cubeFactory);
             return UniTask.CompletedTask;
         }
     }
