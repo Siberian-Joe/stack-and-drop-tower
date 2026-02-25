@@ -10,7 +10,7 @@ namespace Game.UI.BottomBar.Runtime
     public sealed class BottomBarDragInteractor : ICubeDragInteractor
     {
         private readonly IGameplayWindowContext _gameplayWindow;
-        private readonly BottomBarDragSession _session;
+        private readonly IBottomBarDragSession _session;
         private readonly ITowerPlacementRulesEvaluator _placementRules;
         private readonly ITowerStackState _towerStack;
         private readonly ICubeViewFactory _cubeFactory;
@@ -18,7 +18,7 @@ namespace Game.UI.BottomBar.Runtime
 
         public BottomBarDragInteractor(
             IGameplayWindowContext gameplayWindow,
-            BottomBarDragSession session,
+            IBottomBarDragSession session,
             ITowerPlacementRulesEvaluator placementRules,
             ITowerStackState towerStack,
             ICubeViewFactory cubeFactory,

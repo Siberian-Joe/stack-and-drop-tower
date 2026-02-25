@@ -7,10 +7,7 @@ namespace Game.UI.Screens.Runtime
     {
         private readonly AddressablesPanelService _service;
 
-        public ScreenHandle(AddressablesPanelService service)
-        {
-            _service = service ?? throw new ArgumentNullException(nameof(service));
-        }
+        public ScreenHandle(AddressablesPanelService service) => _service = service ?? throw new ArgumentNullException(nameof(service));
 
         public Type ViewType => typeof(TView);
         public bool IsLoaded => _service.IsLoaded(typeof(TView));

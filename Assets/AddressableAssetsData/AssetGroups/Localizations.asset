@@ -10,30 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Screens
+  m_Name: Localizations
   m_EditorClassIdentifier: 
-  m_GroupName: Screens
+  m_GroupName: Localizations
   m_Data:
     m_SerializedData: []
-  m_GUID: 5a492b21c431ead48bf074f6e25343c8
+  m_GUID: 3fe8aaa8fc5b77a40bca2b548b53dbfa
   m_SerializeEntries:
-  - m_GUID: 05ca4d147a3bc8040a0d4658b8a98945
-    m_Address: GameplayWindow
+  - m_GUID: 4e4a588a7eb4ab543a9f929f60f3b554
+    m_Address: ru-RU
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1492128607df5124abed74aa5e7a3b39
-    m_Address: ActionInfoOverlay
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 728d0d270745b3d42b8ce927bc7a6edf
-    m_Address: LoadingOverlay
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9820144b301bdc94aadce38e4203f592
-    m_Address: ScreenRoots
+  - m_GUID: d16716c3ce63d3244a146577abbd0c5a
+    m_Address: en-US
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -41,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 3812a90f0df9ef74aa7412aebb7f1379, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: ae9a15399f50b7a46bc6e20d1033dc1a, type: 2}
-    - {fileID: 11400000, guid: 32eb2b360f829fa489eb78667d441937, type: 2}
+    - {fileID: 11400000, guid: 003cb5cf087d9ea4b8e9f7b6c5e77578, type: 2}
+    - {fileID: 11400000, guid: 4c25376146d7b2748932e6041818e79b, type: 2}

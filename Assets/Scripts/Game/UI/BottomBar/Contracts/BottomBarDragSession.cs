@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Game.UI.BottomBar.Contracts
 {
-    public sealed class BottomBarDragSession
+    public sealed class BottomBarDragSession : IBottomBarDragSession
     {
         public GameObject DragObject { get; set; }
         public RectTransform DragRect { get; set; }
@@ -15,7 +15,7 @@ namespace Game.UI.BottomBar.Contracts
         public string DraggedColorId { get; set; } = string.Empty;
         public string LastPlacementFailureKey { get; set; }
 
-        public bool IsDragging => DragObject != null && DragRect != null;
+        public bool IsDragging => DragObject && DragRect;
 
         public void Reset()
         {

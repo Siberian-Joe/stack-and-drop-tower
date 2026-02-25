@@ -1,11 +1,12 @@
-﻿using System;
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using Game.Bootstrap.Runtime.StartupTasks;
 using Game.Config.Authoring;
 using Game.Config.Contracts;
 using Game.Config.Runtime;
 using Game.Lifetime.Contracts;
 using Game.Lifetime.Runtime;
+using Game.Localization.Contracts;
+using Game.Localization.Runtime;
 using Game.Progress.Contracts;
 using Game.Progress.Runtime;
 using Game.Scenes.Authoring;
@@ -29,6 +30,9 @@ namespace Game.Bootstrap.Runtime.Installers
 
         [Header("Screens")] [SerializeField] private ScreenRoots _screenRootsPrefab;
         [SerializeField] private ScreenCatalog _screenCatalog;
+
+        [Header("Localization")] [SerializeField]
+        private AssetReferenceT<TextAsset> _localizationJson;
 
         public override void InstallBindings()
         {
@@ -127,6 +131,23 @@ namespace Game.Bootstrap.Runtime.Installers
 
             Container
                 .BindInterfacesTo<AddressablesPanelService>()
+                .AsSingle();
+
+            Container
+                .BindInstance(_localizationJson)
+                .AsSingle();
+
+            Container
+                .Bind<ILocalizationProvider>()
+                .To<AddressablesJsonLocalizationProvider>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<LocalizationStore>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<LoadLocalizationTask>()
                 .AsSingle();
         }
     }

@@ -53,16 +53,16 @@ namespace Game.UI.Screens.Runtime
         {
             get
             {
-                if (_view)
-                    return _view;
+                if (_handle != null)
+                    return _handle.View;
 
-                return _panels.TryGetView(out _view) == false
-                    ? throw new InvalidOperationException($"Failed to get {nameof(GameplayWindowView)} from panels.")
-                    : _view;
+                return _panels.TryGetHandle(out _handle) == false
+                    ? throw new InvalidOperationException($"Failed to get {nameof(GameplayWindowView)} from panels")
+                    : _handle.View;
             }
         }
 
-        private GameplayWindowView _view;
+        private IScreenHandle<GameplayWindowView> _handle;
 
         public GameplayWindowContext(
             IPanelService panels,

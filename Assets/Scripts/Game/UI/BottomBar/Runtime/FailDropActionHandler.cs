@@ -10,14 +10,17 @@ namespace Game.UI.BottomBar.Runtime
         public int Priority => 10_000;
 
         private readonly IGameplayWindowContext _gameplayWindow;
-        private readonly BottomBarDragSession _session;
+        private readonly IBottomBarDragSession _session;
+        private readonly IActionInfoOverlay _actionInfoOverlay;
 
         public FailDropActionHandler(
             IGameplayWindowContext gameplayWindow,
-            BottomBarDragSession session)
+            IBottomBarDragSession session,
+            IActionInfoOverlay actionInfoOverlay)
         {
             _gameplayWindow = gameplayWindow;
             _session = session;
+            _actionInfoOverlay = actionInfoOverlay;
         }
 
         public bool TryExecute()
@@ -25,8 +28,13 @@ namespace Game.UI.BottomBar.Runtime
             var obj = _session.DragObject;
             var rect = _session.DragRect;
 
-            if (obj == null || rect == null || _gameplayWindow.DragLayer == null)
+            if (obj == false || rect == false || _gameplayWindow.DragLayer == false)
                 return false;
+
+            var key = string.IsNullOrWhiteSpace(_session.LastPlacementFailureKey) == false
+                ? _session.LastPlacementFailureKey
+                : "bottom_bar.action.cube_disappeared";
+            _actionInfoOverlay.Show(key);
 
             PlayFailFallAndDestroy(obj, rect);
             return true;
@@ -44,7 +52,8 @@ namespace Game.UI.BottomBar.Runtime
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.DragLayer, screen, cam, out var local);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.DragLayer, screen, cam,
+                out var local);
             rect.anchoredPosition = local;
 
             var endY = _gameplayWindow.DragLayer.rect.yMin - rect.rect.height - _gameplayWindow.FailFallExtra;
@@ -54,9 +63,10 @@ namespace Game.UI.BottomBar.Runtime
                 .SetEase(_gameplayWindow.FailFallEase)
                 .OnComplete(() =>
                 {
-                    if (obj != null)
+                    if (obj)
                         Object.Destroy(obj);
-                });
+                })
+                .SetLink(rect.gameObject);
         }
     }
 }

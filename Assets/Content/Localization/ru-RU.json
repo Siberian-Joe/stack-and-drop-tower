@@ -1,0 +1,49 @@
+{
+  "Locale": "ru-RU",
+  "Entries": [
+    {
+      "Key": "bottom_bar.action.placed_into_tower",
+      "Value": "Кубик установлен"
+    },
+    {
+      "Key": "bottom_bar.action.dropped_into_hole",
+      "Value": "Кубик выброшен в дыру"
+    },
+    {
+      "Key": "bottom_bar.action.cube_disappeared",
+      "Value": "Кубик пропал"
+    },
+    {
+      "Key": "bottom_bar.rule.pointer_must_be_in_right_half",
+      "Value": "Кубик нужно ставить в правой части экрана"
+    },
+    {
+      "Key": "bottom_bar.rule.pointer_over_bottom_panel",
+      "Value": "Нельзя ставить кубик над нижней панелью"
+    },
+    {
+      "Key": "bottom_bar.rule.pointer_must_be_above_top",
+      "Value": "Ставь кубик выше вершины башни"
+    },
+    {
+      "Key": "bottom_bar.rule.horizontal_offset_too_large",
+      "Value": "Слишком большое смещение по горизонтали"
+    },
+    {
+      "Key": "bottom_bar.rule.invalid_drop_area",
+      "Value": "Некорректная область размещения"
+    },
+    {
+      "Key": "bottom_bar.rule.same_color_required",
+      "Value": "Можно ставить только кубик того же цвета"
+    },
+    {
+      "Key": "bottom_bar.rule.height_limit_reached",
+      "Value": "Достигнуто ограничение по высоте"
+    },
+    {
+      "Key": "bottom_bar.rule.cube_does_not_fit",
+      "Value": "Кубик не помещается"
+    }
+  ]
+}

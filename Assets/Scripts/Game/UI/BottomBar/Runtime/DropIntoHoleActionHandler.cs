@@ -2,7 +2,6 @@
 using Game.UI.BottomBar.Contracts;
 using Game.UI.Screens.Contracts;
 using UnityEngine;
-using Zenject;
 
 namespace Game.UI.BottomBar.Runtime
 {
@@ -11,14 +10,17 @@ namespace Game.UI.BottomBar.Runtime
         public int Priority => 100;
 
         private readonly IGameplayWindowContext _gameplayWindow;
-        private readonly BottomBarDragSession _session;
+        private readonly IBottomBarDragSession _session;
+        private readonly IActionInfoOverlay _actionInfoOverlay;
 
         public DropIntoHoleActionHandler(
             IGameplayWindowContext gameplayWindow,
-            BottomBarDragSession session)
+            IBottomBarDragSession session,
+            IActionInfoOverlay actionInfoOverlay)
         {
             _gameplayWindow = gameplayWindow;
             _session = session;
+            _actionInfoOverlay = actionInfoOverlay;
         }
 
         public bool TryExecute()
@@ -26,13 +28,16 @@ namespace Game.UI.BottomBar.Runtime
             var obj = _session.DragObject;
             var rect = _session.DragRect;
 
-            if (_gameplayWindow.HoleArea == null || _gameplayWindow.HoleMaskRoot == null || obj == null || rect == null)
+            if (_gameplayWindow.HoleArea == false || _gameplayWindow.HoleMaskRoot == false || obj == false ||
+                rect == false)
                 return false;
 
-            if (!IsOverHoleEllipse(_session.LastScreenPoint))
+            if (IsOverHoleEllipse(_session.LastScreenPoint) == false)
                 return false;
 
             PlayHoleFallAndDestroy(obj, rect);
+            _actionInfoOverlay.Show("bottom_bar.action.dropped_into_hole");
+            
             return true;
         }
 
@@ -40,7 +45,8 @@ namespace Game.UI.BottomBar.Runtime
         {
             var cam = _gameplayWindow.UiCamera;
 
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleArea, screenPoint, cam, out var local))
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleArea, screenPoint, cam,
+                    out var local))
                 return false;
 
             var r = _gameplayWindow.HoleArea.rect;
@@ -74,7 +80,8 @@ namespace Game.UI.BottomBar.Runtime
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleMaskRoot, cubeCenterScreen, cam, out var cubeCenterLocal);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleMaskRoot, cubeCenterScreen, cam,
+                out var cubeCenterLocal);
             rect.anchoredPosition = cubeCenterLocal;
 
             Vector2 mouthLocal;
@@ -82,7 +89,8 @@ namespace Game.UI.BottomBar.Runtime
             {
                 var mouthCenterWorld = _gameplayWindow.HoleMouth.TransformPoint(_gameplayWindow.HoleMouth.rect.center);
                 var mouthCenterScreen = RectTransformUtility.WorldToScreenPoint(cam, mouthCenterWorld);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleMaskRoot, mouthCenterScreen, cam, out mouthLocal);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleMaskRoot, mouthCenterScreen,
+                    cam, out mouthLocal);
             }
             else
             {
@@ -94,7 +102,8 @@ namespace Game.UI.BottomBar.Runtime
             rect.DOKill();
 
             var seq = DOTween.Sequence().SetTarget(rect);
-            seq.Append(rect.DOAnchorPos(mouthLocal, _gameplayWindow.HolePullDuration).SetEase(_gameplayWindow.HolePullEase));
+            seq.Append(rect.DOAnchorPos(mouthLocal, _gameplayWindow.HolePullDuration)
+                .SetEase(_gameplayWindow.HolePullEase));
             seq.Append(rect.DOAnchorPosY(endY, _gameplayWindow.HoleFallDuration).SetEase(_gameplayWindow.HoleFallEase));
             seq.OnComplete(() =>
             {

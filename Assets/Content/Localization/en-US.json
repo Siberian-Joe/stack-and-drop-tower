@@ -1,0 +1,49 @@
+{
+  "Locale": "en-US",
+  "Entries": [
+    {
+      "Key": "bottom_bar.action.placed_into_tower",
+      "Value": "Cube placed"
+    },
+    {
+      "Key": "bottom_bar.action.dropped_into_hole",
+      "Value": "Cube dropped into the hole"
+    },
+    {
+      "Key": "bottom_bar.action.cube_disappeared",
+      "Value": "Cube disappeared"
+    },
+    {
+      "Key": "bottom_bar.rule.pointer_must_be_in_right_half",
+      "Value": "Place the cube on the right side of the screen"
+    },
+    {
+      "Key": "bottom_bar.rule.pointer_over_bottom_panel",
+      "Value": "You can't place the cube over the bottom panel"
+    },
+    {
+      "Key": "bottom_bar.rule.pointer_must_be_above_top",
+      "Value": "Place the cube above the top of the tower"
+    },
+    {
+      "Key": "bottom_bar.rule.horizontal_offset_too_large",
+      "Value": "Horizontal offset is too large"
+    },
+    {
+      "Key": "bottom_bar.rule.invalid_drop_area",
+      "Value": "Invalid placement area"
+    },
+    {
+      "Key": "bottom_bar.rule.same_color_required",
+      "Value": "You can only place a cube of the same color"
+    },
+    {
+      "Key": "bottom_bar.rule.height_limit_reached",
+      "Value": "Height limit reached"
+    },
+    {
+      "Key": "bottom_bar.rule.cube_does_not_fit",
+      "Value": "The cube doesn't fit"
+    }
+  ]
+}

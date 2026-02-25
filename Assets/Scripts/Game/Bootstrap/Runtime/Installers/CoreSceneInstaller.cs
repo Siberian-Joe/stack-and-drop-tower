@@ -10,6 +10,7 @@ using Game.Startup.Contracts;
 using Game.Startup.Runtime;
 using Game.UI.BottomBar.Contracts;
 using Game.UI.BottomBar.Runtime;
+using Game.UI.Screens.Contracts;
 using Game.UI.Screens.Runtime;
 using Zenject;
 
@@ -45,13 +46,13 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .BindInterfacesTo<StartupRunner<ISceneStartup, ISceneLifetime>>()
                 .AsSingle();
-            
+
             Container
                 .BindInterfacesTo<GameplayWindowContext>()
                 .AsSingle();
 
             Container
-                .Bind<BottomBarDragSession>()
+                .BindInterfacesAndSelfTo<BottomBarDragSession>()
                 .AsSingle();
 
             Container
@@ -129,9 +130,13 @@ namespace Game.Bootstrap.Runtime.Installers
                 .Bind<ISceneStartupTask>()
                 .To<RestoreTowerProgressTask>()
                 .AsSingle();
-            
+
             Container
                 .BindInterfacesTo<ShowGameplayWindowTask>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesAndSelfTo<ActionInfoOverlay>()
                 .AsSingle();
         }
     }

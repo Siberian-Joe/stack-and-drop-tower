@@ -18,6 +18,6 @@ namespace Game.UI.Screens.Contracts
         bool IsLoaded<TView>() where TView : ScreenView;
         bool IsOpen<TView>() where TView : ScreenView;
 
-        bool TryGetView<TView>(out TView view) where TView : ScreenView;
+        bool TryGetHandle<TView>(out IScreenHandle<TView> handle) where TView : ScreenView;
     }
 }

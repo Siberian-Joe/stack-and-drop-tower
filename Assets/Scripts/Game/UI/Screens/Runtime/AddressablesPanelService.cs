@@ -119,11 +119,31 @@ namespace Game.UI.Screens.Runtime
         public bool IsOpen<TView>() where TView : ScreenView
             => IsOpen(typeof(TView));
 
+        public bool TryGetHandle<TView>(out IScreenHandle<TView> handle) where TView : ScreenView
+        {
+            var type = typeof(TView);
+
+            if (_handles.TryGetValue(type, out var existing))
+            {
+                handle = (IScreenHandle<TView>)existing;
+                return true;
+            }
+
+            if (_states.ContainsKey(type))
+            {
+                handle = GetOrCreateHandle<TView>();
+                return true;
+            }
+
+            handle = null;
+            return false;
+        }
+        
         public bool TryGetView<TView>(out TView view) where TView : ScreenView
         {
             if (_states.TryGetValue(typeof(TView), out var state) &&
                 state.View is TView typed &&
-                state.Instance != null)
+                state.Instance)
             {
                 view = typed;
                 return true;
@@ -136,8 +156,8 @@ namespace Game.UI.Screens.Runtime
         internal bool IsLoaded(Type viewType)
         {
             return _states.TryGetValue(viewType, out var state) &&
-                   state.Instance != null &&
-                   state.View != null;
+                   state.Instance &&
+                   state.View;
         }
 
         internal bool IsOpen(Type viewType)

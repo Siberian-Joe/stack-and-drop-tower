@@ -11,20 +11,23 @@ namespace Game.UI.BottomBar.Runtime
         public int Priority => 200;
 
         private readonly IGameplayWindowContext _windowContext;
-        private readonly BottomBarDragSession _session;
+        private readonly IBottomBarDragSession _session;
         private readonly ITowerPlacementRulesEvaluator _placementRules;
         private readonly ITowerStackState _towerStack;
+        private readonly IActionInfoOverlay _actionInfoOverlay;
 
         public PlaceIntoTowerActionHandler(
             IGameplayWindowContext windowContext,
-            BottomBarDragSession session,
+            IBottomBarDragSession session,
             ITowerPlacementRulesEvaluator placementRules,
-            ITowerStackState towerStack)
+            ITowerStackState towerStack,
+            IActionInfoOverlay actionInfoOverlay)
         {
             _windowContext = windowContext;
             _session = session;
             _placementRules = placementRules;
             _towerStack = towerStack;
+            _actionInfoOverlay = actionInfoOverlay;
         }
 
         public bool TryExecute()
@@ -78,7 +81,7 @@ namespace Game.UI.BottomBar.Runtime
 
             if (TowerPlacementGeometry.TryComputeTarget(context, out var target) == false)
             {
-                _session.LastPlacementFailureKey = "bottom_bar.rule.cube_does_not_fit";
+                _session.LastPlacementFailureKey = "bottom_bar.rule.height_limit_reached";
                 return false;
             }
 
@@ -100,6 +103,7 @@ namespace Game.UI.BottomBar.Runtime
                 width,
                 height));
 
+            _actionInfoOverlay.Show("bottom_bar.action.placed_into_tower");
             return true;
         }
     }
