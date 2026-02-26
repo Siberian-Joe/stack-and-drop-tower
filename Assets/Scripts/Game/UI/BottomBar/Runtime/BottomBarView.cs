@@ -20,7 +20,17 @@ namespace Game.UI.BottomBar.Runtime
             ICubeViewFactory cubeFactory)
         {
             for (var i = _contentRoot.childCount - 1; i >= 0; i--)
-                Destroy(_contentRoot.GetChild(i).gameObject);
+            {
+                var child = _contentRoot.GetChild(i);
+
+                if (cubeFactory != null && child.TryGetComponent<CubeView>(out var cube))
+                {
+                    cubeFactory.Release(cube);
+                    continue;
+                }
+
+                Destroy(child.gameObject);
+            }
 
             var colors = config.Colors;
             if (colors == null || colors.Count == 0)
@@ -34,7 +44,7 @@ namespace Game.UI.BottomBar.Runtime
                     ? cubeFactory.Create(def, _contentRoot)
                     : Instantiate(_cubePrefab, _contentRoot);
 
-                if (cube == null)
+                if (cube == false)
                     continue;
 
                 if (cubeFactory == null)

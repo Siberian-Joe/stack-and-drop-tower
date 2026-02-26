@@ -124,6 +124,11 @@ namespace Game.Bootstrap.Runtime.Installers
                 .Bind<ITowerPlacementRule>()
                 .To<MaxHorizontalOffsetRule>()
                 .AsSingle();
+
+            // Container
+            //     .Bind<ITowerPlacementRule>()
+            //     .To<SameColorAsTopRule>()
+            //     .AsSingle();
         }
 
         private void InstallDropActionHandlers()

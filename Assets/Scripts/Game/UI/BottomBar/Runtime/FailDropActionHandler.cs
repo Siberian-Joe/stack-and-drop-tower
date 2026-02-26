@@ -2,6 +2,7 @@
 using Game.UI.BottomBar.Contracts;
 using Game.UI.Screens.Contracts;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Game.UI.BottomBar.Runtime
 {
@@ -12,15 +13,18 @@ namespace Game.UI.BottomBar.Runtime
         private readonly IGameplayWindowContext _gameplayWindow;
         private readonly IBottomBarDragSession _session;
         private readonly IActionInfoOverlay _actionInfoOverlay;
+        private readonly ICubeViewFactory _cubeFactory;
 
         public FailDropActionHandler(
             IGameplayWindowContext gameplayWindow,
             IBottomBarDragSession session,
-            IActionInfoOverlay actionInfoOverlay)
+            IActionInfoOverlay actionInfoOverlay,
+            ICubeViewFactory cubeFactory)
         {
             _gameplayWindow = gameplayWindow;
             _session = session;
             _actionInfoOverlay = actionInfoOverlay;
+            _cubeFactory = cubeFactory;
         }
 
         public bool TryExecute()
@@ -34,13 +38,14 @@ namespace Game.UI.BottomBar.Runtime
             var key = string.IsNullOrWhiteSpace(_session.LastPlacementFailureKey) == false
                 ? _session.LastPlacementFailureKey
                 : "bottom_bar.action.cube_disappeared";
+
             _actionInfoOverlay.Show(key);
 
-            PlayFailFallAndDestroy(obj, rect);
+            PlayFailFallAndDespawn(obj, rect);
             return true;
         }
 
-        private void PlayFailFallAndDestroy(GameObject obj, RectTransform rect)
+        private void PlayFailFallAndDespawn(GameObject obj, RectTransform rect)
         {
             var cam = _gameplayWindow.UiCamera;
             var screen = RectTransformUtility.WorldToScreenPoint(cam, rect.position);
@@ -52,8 +57,7 @@ namespace Game.UI.BottomBar.Runtime
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.DragLayer, screen, cam,
-                out var local);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.DragLayer, screen, cam, out var local);
             rect.anchoredPosition = local;
 
             var endY = _gameplayWindow.DragLayer.rect.yMin - rect.rect.height - _gameplayWindow.FailFallExtra;
@@ -61,12 +65,23 @@ namespace Game.UI.BottomBar.Runtime
             rect.DOKill();
             rect.DOAnchorPosY(endY, _gameplayWindow.FailFallDuration)
                 .SetEase(_gameplayWindow.FailFallEase)
-                .OnComplete(() =>
-                {
-                    if (obj)
-                        Object.Destroy(obj);
-                })
+                .OnComplete(() => Despawn(obj))
                 .SetLink(rect.gameObject);
+        }
+
+        private void Despawn(GameObject obj)
+        {
+            if (obj == false)
+                return;
+
+            var view = obj.GetComponent<CubeView>();
+            if (view)
+            {
+                _cubeFactory.Release(view);
+                return;
+            }
+
+            Object.Destroy(obj);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Game.UI.BottomBar.Contracts;
 using Game.UI.Screens.Contracts;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Game.UI.BottomBar.Runtime
 {
@@ -12,15 +13,18 @@ namespace Game.UI.BottomBar.Runtime
         private readonly IGameplayWindowContext _gameplayWindow;
         private readonly IBottomBarDragSession _session;
         private readonly IActionInfoOverlay _actionInfoOverlay;
+        private readonly ICubeViewFactory _cubeFactory;
 
         public DropIntoHoleActionHandler(
             IGameplayWindowContext gameplayWindow,
             IBottomBarDragSession session,
-            IActionInfoOverlay actionInfoOverlay)
+            IActionInfoOverlay actionInfoOverlay,
+            ICubeViewFactory cubeFactory)
         {
             _gameplayWindow = gameplayWindow;
             _session = session;
             _actionInfoOverlay = actionInfoOverlay;
+            _cubeFactory = cubeFactory;
         }
 
         public bool TryExecute()
@@ -28,16 +32,15 @@ namespace Game.UI.BottomBar.Runtime
             var obj = _session.DragObject;
             var rect = _session.DragRect;
 
-            if (_gameplayWindow.HoleArea == false || _gameplayWindow.HoleMaskRoot == false || obj == false ||
-                rect == false)
+            if (_gameplayWindow.HoleArea == false || _gameplayWindow.HoleMaskRoot == false || obj == false || rect == false)
                 return false;
 
             if (IsOverHoleEllipse(_session.LastScreenPoint) == false)
                 return false;
 
-            PlayHoleFallAndDestroy(obj, rect);
+            PlayHoleFallAndDespawn(obj, rect);
             _actionInfoOverlay.Show("bottom_bar.action.dropped_into_hole");
-            
+
             return true;
         }
 
@@ -45,16 +48,14 @@ namespace Game.UI.BottomBar.Runtime
         {
             var cam = _gameplayWindow.UiCamera;
 
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleArea, screenPoint, cam,
-                    out var local))
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleArea, screenPoint, cam, out var local) == false)
                 return false;
 
-            var r = _gameplayWindow.HoleArea.rect;
+            var rect = _gameplayWindow.HoleArea.rect;
+            local -= rect.center;
 
-            local -= (Vector2)r.center;
-
-            var a = r.width * 0.5f * _gameplayWindow.HoleEllipsePadding;
-            var b = r.height * 0.5f * _gameplayWindow.HoleEllipsePadding;
+            var a = rect.width * 0.5f * _gameplayWindow.HoleEllipsePadding;
+            var b = rect.height * 0.5f * _gameplayWindow.HoleEllipsePadding;
 
             if (a <= 0f || b <= 0f)
                 return false;
@@ -62,10 +63,10 @@ namespace Game.UI.BottomBar.Runtime
             var x = local.x;
             var y = local.y;
 
-            return (x * x) / (a * a) + (y * y) / (b * b) <= 1f;
+            return x * x / (a * a) + y * y / (b * b) <= 1f;
         }
 
-        private void PlayHoleFallAndDestroy(GameObject obj, RectTransform rect)
+        private void PlayHoleFallAndDespawn(GameObject obj, RectTransform rect)
         {
             var cam = _gameplayWindow.UiCamera;
 
@@ -80,17 +81,15 @@ namespace Game.UI.BottomBar.Runtime
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleMaskRoot, cubeCenterScreen, cam,
-                out var cubeCenterLocal);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleMaskRoot, cubeCenterScreen, cam, out var cubeCenterLocal);
             rect.anchoredPosition = cubeCenterLocal;
 
             Vector2 mouthLocal;
-            if (_gameplayWindow.HoleMouth != null)
+            if (_gameplayWindow.HoleMouth)
             {
                 var mouthCenterWorld = _gameplayWindow.HoleMouth.TransformPoint(_gameplayWindow.HoleMouth.rect.center);
                 var mouthCenterScreen = RectTransformUtility.WorldToScreenPoint(cam, mouthCenterWorld);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleMaskRoot, mouthCenterScreen,
-                    cam, out mouthLocal);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(_gameplayWindow.HoleMaskRoot, mouthCenterScreen, cam, out mouthLocal);
             }
             else
             {
@@ -101,15 +100,31 @@ namespace Game.UI.BottomBar.Runtime
 
             rect.DOKill();
 
-            var seq = DOTween.Sequence().SetTarget(rect);
-            seq.Append(rect.DOAnchorPos(mouthLocal, _gameplayWindow.HolePullDuration)
-                .SetEase(_gameplayWindow.HolePullEase));
-            seq.Append(rect.DOAnchorPosY(endY, _gameplayWindow.HoleFallDuration).SetEase(_gameplayWindow.HoleFallEase));
-            seq.OnComplete(() =>
+            DOTween.Sequence()
+                .SetTarget(rect)
+                .Append(rect
+                    .DOAnchorPos(mouthLocal, _gameplayWindow.HolePullDuration)
+                    .SetEase(_gameplayWindow.HolePullEase))
+                .Append(rect
+                    .DOAnchorPosY(endY, _gameplayWindow.HoleFallDuration)
+                    .SetEase(_gameplayWindow.HoleFallEase))
+                .OnComplete(() => Despawn(obj))
+                .SetLink(rect.gameObject);
+        }
+
+        private void Despawn(GameObject obj)
+        {
+            if (obj == false)
+                return;
+
+            var view = obj.GetComponent<CubeView>();
+            if (view)
             {
-                if (obj != null)
-                    Object.Destroy(obj);
-            });
+                _cubeFactory.Release(view);
+                return;
+            }
+
+            Object.Destroy(obj);
         }
     }
 }

@@ -278,11 +278,22 @@ namespace Game.UI.BottomBar.Runtime
             rect.DOKill();
             rect.DOAnchorPosY(endY, _gameplayWindow.FailFallDuration)
                 .SetEase(_gameplayWindow.FailFallEase)
-                .OnComplete(() =>
-                {
-                    if (obj)
-                        Object.Destroy(obj);
-                });
+                .OnComplete(() => Despawn(obj));
+        }
+
+        private void Despawn(GameObject obj)
+        {
+            if (obj == false)
+                return;
+
+            var view = obj.GetComponent<CubeView>();
+            if (view)
+            {
+                _cubeFactory.Release(view);
+                return;
+            }
+
+            Object.Destroy(obj);
         }
 
         private bool IsTowerCube(RectTransform rect) =>
@@ -310,7 +321,7 @@ namespace Game.UI.BottomBar.Runtime
 
             _gameplayWindow.ScrollRect.enabled = true;
         }
-        
+
         private void PlayFailCollapseAndDestroy(in TowerCubeState cube)
         {
             if (cube.Rect == false)
