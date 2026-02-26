@@ -33,7 +33,7 @@ namespace Game.UI.BottomBar.Runtime
             ColorId = def.Id;
             Sprite = def.Sprite;
 
-            if (_image != null)
+            if (_image)
                 _image.sprite = def.Sprite;
         }
 
@@ -50,7 +50,7 @@ namespace Game.UI.BottomBar.Runtime
 
             _startPos = eventData.position;
 
-            if (_scrollRect == null)
+            if (_scrollRect == false)
             {
                 _mode = Mode.Dragging;
                 _dragInteractor.BeginDrag(this, eventData.pointerId, eventData.position);
@@ -65,7 +65,7 @@ namespace Game.UI.BottomBar.Runtime
             if (_dragInteractor == null)
                 return;
 
-            if (_scrollRect == null)
+            if (_scrollRect == false)
             {
                 _dragInteractor.Move(eventData.position);
                 return;
@@ -105,7 +105,7 @@ namespace Game.UI.BottomBar.Runtime
             if (_dragInteractor == null)
                 return;
 
-            if (_scrollRect == null)
+            if (_scrollRect == false)
             {
                 if (_mode == Mode.Dragging)
                     _dragInteractor.EndDrag(eventData.pointerId);
@@ -114,13 +114,14 @@ namespace Game.UI.BottomBar.Runtime
                 return;
             }
 
-            if (_mode == Mode.Dragging)
+            switch (_mode)
             {
-                _dragInteractor.EndDrag(eventData.pointerId);
-            }
-            else if (_mode == Mode.Scrolling)
-            {
-                _scrollRect.OnEndDrag(eventData);
+                case Mode.Dragging:
+                    _dragInteractor.EndDrag(eventData.pointerId);
+                    break;
+                case Mode.Scrolling:
+                    _scrollRect.OnEndDrag(eventData);
+                    break;
             }
 
             _mode = Mode.None;

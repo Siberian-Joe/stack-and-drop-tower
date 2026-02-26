@@ -33,7 +33,7 @@ namespace Game.UI.BottomBar.Runtime
         public UniTask ExecuteAsync(CancellationToken token)
         {
             var view = _gameplayWindow.BottomBarView;
-            if (view == null)
+            if (view == false)
                 throw new InvalidOperationException("GameplayWindow.BottomBar is not assigned");
 
             view.Build(_config.Current.BottomBar, _dragInteractor, _cubeFactory);

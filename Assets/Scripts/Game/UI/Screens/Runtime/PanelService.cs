@@ -5,8 +5,6 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Game.UI.Screens.Contracts;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using Zenject;
 using Object = UnityEngine.Object;
 
@@ -84,13 +82,10 @@ namespace Game.UI.Screens.Runtime
                 return;
             }
 
-            if (IsOverlayType(type))
-            {
-                OpenInternal(state);
-                return;
-            }
+            if (IsOverlayType(type) == false)
+                throw new InvalidOperationException($"Unsupported screen type: {type.FullName}");
 
-            throw new InvalidOperationException($"Unsupported screen type: {type.FullName}");
+            OpenInternal(state);
         }
 
         public void Close<TView>() where TView : ScreenView =>
@@ -187,13 +182,15 @@ namespace Game.UI.Screens.Runtime
             if (component == false)
             {
                 Object.Destroy(instance);
-                throw new InvalidOperationException($"Prefab does not contain requested screen component: {viewType.FullName}");
+                throw new InvalidOperationException(
+                    $"Prefab does not contain requested screen component: {viewType.FullName}");
             }
 
             if (component is not ScreenView screenView)
             {
                 Object.Destroy(instance);
-                throw new InvalidOperationException($"Screen component must inherit {nameof(ScreenView)}: {viewType.FullName}");
+                throw new InvalidOperationException(
+                    $"Screen component must inherit {nameof(ScreenView)}: {viewType.FullName}");
             }
 
             if (!IsWindowType(viewType) && !IsOverlayType(viewType))
