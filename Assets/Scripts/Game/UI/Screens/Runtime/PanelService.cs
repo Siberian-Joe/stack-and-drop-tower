@@ -12,37 +12,34 @@ using Object = UnityEngine.Object;
 
 namespace Game.UI.Screens.Runtime
 {
-    public sealed class AddressablesPanelService : IPanelService, IDisposable
+    public sealed class PanelService : IPanelService, IDisposable
     {
         private sealed class ScreenState
         {
             public Type ViewType;
             public GameObject Instance;
             public ScreenView View;
-            public AsyncOperationHandle<GameObject> PrefabHandle;
-            public bool HasPrefabHandle;
             public bool IsOpen;
         }
 
         private readonly IInstantiator _instantiator;
         private readonly IScreenRoots _roots;
-        private readonly IScreenCatalog _catalog;
+        private readonly IScreenPrefabProvider _prefabs;
 
         private readonly Dictionary<Type, ScreenState> _states = new();
-        private readonly Dictionary<Type, object> _handles = new();
+        private readonly Dictionary<Type, IScreenHandle> _handles = new();
 
         private readonly SemaphoreSlim _loadMutex = new(1, 1);
-
         private Type _activeWindowType;
 
-        public AddressablesPanelService(
+        public PanelService(
             IInstantiator instantiator,
             IScreenRoots roots,
-            IScreenCatalog catalog)
+            IScreenPrefabProvider prefabs)
         {
             _instantiator = instantiator ?? throw new ArgumentNullException(nameof(instantiator));
             _roots = roots ?? throw new ArgumentNullException(nameof(roots));
-            _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+            _prefabs = prefabs ?? throw new ArgumentNullException(nameof(prefabs));
         }
 
         public async UniTask<IScreenHandle<TView>> LoadAsync<TView>(CancellationToken token = default)
@@ -96,16 +93,13 @@ namespace Game.UI.Screens.Runtime
             throw new InvalidOperationException($"Unsupported screen type: {type.FullName}");
         }
 
-        public void Close<TView>() where TView : ScreenView
-        {
+        public void Close<TView>() where TView : ScreenView =>
             CloseInternal(typeof(TView));
-        }
 
         public void CloseAllOverlays()
         {
-            foreach (var pair in _states)
+            foreach (var type in _states.Keys.ToArray())
             {
-                var type = pair.Key;
                 if (!IsOverlayType(type))
                     continue;
 
@@ -113,11 +107,11 @@ namespace Game.UI.Screens.Runtime
             }
         }
 
-        public bool IsLoaded<TView>() where TView : ScreenView
-            => IsLoaded(typeof(TView));
+        public bool IsLoaded<TView>() where TView : ScreenView =>
+            IsLoaded(typeof(TView));
 
-        public bool IsOpen<TView>() where TView : ScreenView
-            => IsOpen(typeof(TView));
+        public bool IsOpen<TView>() where TView : ScreenView =>
+            IsOpen(typeof(TView));
 
         public bool TryGetHandle<TView>(out IScreenHandle<TView> handle) where TView : ScreenView
         {
@@ -125,8 +119,8 @@ namespace Game.UI.Screens.Runtime
 
             if (_handles.TryGetValue(type, out var existing))
             {
-                handle = (IScreenHandle<TView>)existing;
-                return true;
+                handle = existing as IScreenHandle<TView>;
+                return handle != null;
             }
 
             if (_states.ContainsKey(type))
@@ -138,8 +132,14 @@ namespace Game.UI.Screens.Runtime
             handle = null;
             return false;
         }
-        
-        public bool TryGetView<TView>(out TView view) where TView : ScreenView
+
+        internal bool IsLoaded(Type viewType) =>
+            _states.TryGetValue(viewType, out var state) && state.Instance && state.View;
+
+        internal bool IsOpen(Type viewType) =>
+            _states.TryGetValue(viewType, out var state) && state.IsOpen;
+
+        internal bool TryGetView<TView>(out TView view) where TView : ScreenView
         {
             if (_states.TryGetValue(typeof(TView), out var state) &&
                 state.View is TView typed &&
@@ -151,18 +151,6 @@ namespace Game.UI.Screens.Runtime
 
             view = null;
             return false;
-        }
-
-        internal bool IsLoaded(Type viewType)
-        {
-            return _states.TryGetValue(viewType, out var state) &&
-                   state.Instance &&
-                   state.View;
-        }
-
-        internal bool IsOpen(Type viewType)
-        {
-            return _states.TryGetValue(viewType, out var state) && state.IsOpen;
         }
 
         private ScreenHandle<TView> GetOrCreateHandle<TView>() where TView : ScreenView
@@ -177,59 +165,40 @@ namespace Game.UI.Screens.Runtime
             return handle;
         }
 
-        private async UniTask<ScreenState> GetOrCreateStateAsync<TView>(CancellationToken token) where TView : ScreenView
+        private async UniTask<ScreenState> GetOrCreateStateAsync<TView>(CancellationToken token)
+            where TView : ScreenView
         {
             var viewType = typeof(TView);
-            
+
             if (_states.TryGetValue(viewType, out var existing))
                 return existing;
 
-            var prefabRef = _catalog.Get<TView>();
-
-            var prefabHandle = Addressables.LoadAssetAsync<GameObject>(prefabRef);
-            var prefab = await prefabHandle.ToUniTask(cancellationToken: token);
+            var prefab = await _prefabs.LoadPrefabAsync<TView>(token);
+            if (prefab == false)
+                throw new InvalidOperationException($"Prefab is null for screen: {viewType.FullName}");
 
             await UniTask.SwitchToMainThread(token);
 
             var instance = _instantiator.InstantiatePrefab(prefab, _roots.CacheRoot);
             if (instance == false)
-            {
-                if (prefabHandle.IsValid())
-                    Addressables.Release(prefabHandle);
-
                 throw new InvalidOperationException($"Failed to instantiate screen prefab: {viewType.FullName}");
-            }
 
             var component = instance.GetComponent(viewType);
             if (component == false)
             {
                 Object.Destroy(instance);
-
-                if (prefabHandle.IsValid())
-                    Addressables.Release(prefabHandle);
-
-                throw new InvalidOperationException(
-                    $"Prefab does not contain requested screen component: {viewType.FullName}");
+                throw new InvalidOperationException($"Prefab does not contain requested screen component: {viewType.FullName}");
             }
 
             if (component is not ScreenView screenView)
             {
                 Object.Destroy(instance);
-
-                if (prefabHandle.IsValid())
-                    Addressables.Release(prefabHandle);
-
-                throw new InvalidOperationException(
-                    $"Screen component must inherit {nameof(ScreenView)}: {viewType.FullName}");
+                throw new InvalidOperationException($"Screen component must inherit {nameof(ScreenView)}: {viewType.FullName}");
             }
 
             if (!IsWindowType(viewType) && !IsOverlayType(viewType))
             {
                 Object.Destroy(instance);
-
-                if (prefabHandle.IsValid())
-                    Addressables.Release(prefabHandle);
-
                 throw new InvalidOperationException(
                     $"Screen '{viewType.FullName}' must inherit {nameof(WindowScreenView)} or {nameof(OverlayScreenView)}");
             }
@@ -242,8 +211,6 @@ namespace Game.UI.Screens.Runtime
                 ViewType = viewType,
                 Instance = instance,
                 View = screenView,
-                PrefabHandle = prefabHandle,
-                HasPrefabHandle = true,
                 IsOpen = false
             };
 
@@ -295,11 +262,11 @@ namespace Game.UI.Screens.Runtime
                 : throw new InvalidOperationException($"Unsupported screen type: {viewType.FullName}");
         }
 
-        private static bool IsWindowType(Type viewType)
-            => typeof(WindowScreenView).IsAssignableFrom(viewType);
+        private static bool IsWindowType(Type viewType) =>
+            typeof(WindowScreenView).IsAssignableFrom(viewType);
 
-        private static bool IsOverlayType(Type viewType)
-            => typeof(OverlayScreenView).IsAssignableFrom(viewType);
+        private static bool IsOverlayType(Type viewType) =>
+            typeof(OverlayScreenView).IsAssignableFrom(viewType);
 
         private static void MoveToParent(Transform transform, Transform parent)
         {
@@ -312,13 +279,10 @@ namespace Game.UI.Screens.Runtime
 
         public void Dispose()
         {
-            foreach (var state in _states.Select(pair => pair.Value).Where(state => state != null))
+            foreach (var state in _states.Values.Where(x => x != null))
             {
                 if (state.Instance)
                     Object.Destroy(state.Instance);
-
-                if (state.HasPrefabHandle && state.PrefabHandle.IsValid())
-                    Addressables.Release(state.PrefabHandle);
             }
 
             _states.Clear();

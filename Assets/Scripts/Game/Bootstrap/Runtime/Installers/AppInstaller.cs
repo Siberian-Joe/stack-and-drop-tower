@@ -9,6 +9,8 @@ using Game.Localization.Contracts;
 using Game.Localization.Runtime;
 using Game.Progress.Contracts;
 using Game.Progress.Runtime;
+using Game.SceneReady.Contracts;
+using Game.SceneReady.Runtime;
 using Game.Scenes.Authoring;
 using Game.Scenes.Contracts;
 using Game.Scenes.Runtime;
@@ -123,7 +125,11 @@ namespace Game.Bootstrap.Runtime.Installers
                 .AsSingle();
 
             Container
-                .BindInterfacesTo<AddressablesPanelService>()
+                .BindInterfacesTo<AddressablesScreenPrefabProvider>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<PanelService>()
                 .AsSingle();
         }
 
@@ -149,6 +155,11 @@ namespace Game.Bootstrap.Runtime.Installers
 
         private void InstallStartup()
         {
+            Container
+                .Bind<IAppReadyGate>()
+                .To<AppReadyGate>()
+                .AsSingle();
+
             Container
                 .Bind<StartupPipeline<IAppStartupTask>>()
                 .AsSingle();
@@ -176,6 +187,10 @@ namespace Game.Bootstrap.Runtime.Installers
 
             Container
                 .BindInterfacesTo<LoadProgressTask>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<OpenAppReadyGateTask>()
                 .AsSingle();
 
             Container

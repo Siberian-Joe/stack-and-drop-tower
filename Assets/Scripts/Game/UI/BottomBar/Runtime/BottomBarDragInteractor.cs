@@ -199,17 +199,23 @@ namespace Game.UI.BottomBar.Runtime
                 return;
             }
 
-            var start = cube.Rect.anchoredPosition;
-            if (start.y < newTarget.y)
-            {
-                start.y = newTarget.y + cube.Height * 0.75f;
-                cube.Rect.anchoredPosition = start;
-            }
+            var minFall = cube.Height * 0.75f;
+            var current = cube.Rect.anchoredPosition;
 
-            cube.Rect
-                .DOAnchorPos(newTarget, _gameplayWindow.FallDuration)
-                .SetEase(_gameplayWindow.FallEase)
-                .SetLink(cube.Rect.gameObject);
+            var start = new Vector2(
+                newTarget.x,
+                Mathf.Max(current.y, newTarget.y + minFall));
+
+            var approachDuration = Mathf.Clamp(_gameplayWindow.FallDuration * 0.35f, 0.05f, 0.12f);
+
+            BottomBarDragVisualUtility.PlayApproachThenFall(
+                rect: cube.Rect,
+                approachPos: start,
+                targetPos: newTarget,
+                approachDuration: approachDuration,
+                approachEase: Ease.OutQuad,
+                fallDuration: _gameplayWindow.FallDuration,
+                fallEase: _gameplayWindow.FallEase);
 
             _towerStack.Add(cube.WithTarget(newTarget));
         }
@@ -278,22 +284,11 @@ namespace Game.UI.BottomBar.Runtime
             rect.DOKill();
             rect.DOAnchorPosY(endY, _gameplayWindow.FailFallDuration)
                 .SetEase(_gameplayWindow.FailFallEase)
-                .OnComplete(() => Despawn(obj));
-        }
-
-        private void Despawn(GameObject obj)
-        {
-            if (obj == false)
-                return;
-
-            var view = obj.GetComponent<CubeView>();
-            if (view)
-            {
-                _cubeFactory.Release(view);
-                return;
-            }
-
-            Object.Destroy(obj);
+                .OnComplete(() =>
+                {
+                    if (obj)
+                        Object.Destroy(obj);
+                });
         }
 
         private bool IsTowerCube(RectTransform rect) =>

@@ -26,6 +26,10 @@ namespace Game.Startup.Runtime
                 {
                     await task.ExecuteAsync(token);
                 }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
                 catch (Exception exception)
                 {
                     Debug.LogException(exception);

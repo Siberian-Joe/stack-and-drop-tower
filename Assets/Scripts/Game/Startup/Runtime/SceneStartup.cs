@@ -7,18 +7,26 @@ namespace Game.Startup.Runtime
 {
     public sealed class SceneStartup : StartupBase<ISceneStartupTask>, ISceneStartup
     {
-        private readonly ISceneReadyGate _gate;
+        private readonly ISceneReadyGate _sceneGate;
+        private readonly IAppReadyGate _appGate;
 
         public SceneStartup(
             StartupPipeline<ISceneStartupTask> pipeline,
-            ISceneReadyGate gate) : base(pipeline) =>
-            _gate = gate;
+            ISceneReadyGate sceneGate,
+            IAppReadyGate appGate) : base(pipeline)
+        {
+            _sceneGate = sceneGate;
+            _appGate = appGate;
+        }
 
         public override async UniTask RunAsync(CancellationToken token)
         {
+            await _appGate.WaitReadyAsync(token);
+
             await base.RunAsync(token);
+
             await UniTask.SwitchToMainThread(token);
-            _gate.Open();
+            _sceneGate.Open();
         }
     }
 }

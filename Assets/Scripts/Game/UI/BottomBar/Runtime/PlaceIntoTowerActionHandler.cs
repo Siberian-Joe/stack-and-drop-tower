@@ -91,16 +91,21 @@ namespace Game.UI.BottomBar.Runtime
                 return false;
             }
 
-            var start = target;
             var minFall = height * 0.75f;
-            start.y = Mathf.Max(dropPivotPos.y, target.y + minFall);
-            start.x = target.x;
+            var start = new Vector2(
+                target.x,
+                Mathf.Max(dropPivotPos.y, target.y + minFall));
 
-            dragRect.DOKill();
-            dragRect.anchoredPosition = start;
-            dragRect
-                .DOAnchorPos(target, _windowContext.FallDuration)
-                .SetEase(_windowContext.FallEase);
+            var approachDuration = Mathf.Clamp(_windowContext.FallDuration * 0.35f, 0.05f, 0.12f);
+
+            BottomBarDragVisualUtility.PlayApproachThenFall(
+                rect: dragRect,
+                approachPos: start,
+                targetPos: target,
+                approachDuration: approachDuration,
+                approachEase: Ease.OutQuad,
+                fallDuration: _windowContext.FallDuration,
+                fallEase: _windowContext.FallEase);
 
             _towerStack.Add(new TowerCubeState(
                 _session.DraggedColorId,
