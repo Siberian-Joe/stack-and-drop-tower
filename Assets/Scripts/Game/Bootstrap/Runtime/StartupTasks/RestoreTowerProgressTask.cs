@@ -5,7 +5,6 @@ using Game.Startup.Contracts;
 using Game.UI.BottomBar.Contracts;
 using Game.UI.BottomBar.Runtime;
 using Game.UI.Screens.Contracts;
-using Game.UI.Screens.Runtime;
 using UnityEngine;
 
 namespace Game.Bootstrap.Runtime.StartupTasks

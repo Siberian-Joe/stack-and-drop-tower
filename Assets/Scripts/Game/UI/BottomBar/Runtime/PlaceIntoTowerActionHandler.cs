@@ -2,13 +2,14 @@
 using Game.UI.BottomBar.Contracts;
 using Game.UI.Screens.Contracts;
 using UnityEngine;
-using Zenject;
 
 namespace Game.UI.BottomBar.Runtime
 {
     public sealed class PlaceIntoTowerActionHandler : IDropActionHandler
     {
         public int Priority => 200;
+
+        private const int RandomTargetAttempts = 16;
 
         private readonly IGameplayWindowContext _windowContext;
         private readonly IBottomBarDragSession _session;
@@ -41,7 +42,10 @@ namespace Game.UI.BottomBar.Runtime
 
             var cam = _windowContext.UiCamera;
 
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_windowContext.TowerRoot, _session.LastScreenPoint, cam,
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _windowContext.TowerRoot,
+                    _session.LastScreenPoint,
+                    cam,
                     out var pointerLocal) == false)
             {
                 return false;
@@ -58,7 +62,7 @@ namespace Game.UI.BottomBar.Runtime
             var width = dragRect.rect.width;
             var height = dragRect.rect.height;
 
-            var context = new TowerPlacementRuleContext(
+            var baseContext = new TowerPlacementRuleContext(
                 screenPoint: _session.LastScreenPoint,
                 desiredPivotPos: dropPivotPos,
                 towerRoot: _windowContext.TowerRoot,
@@ -72,16 +76,18 @@ namespace Game.UI.BottomBar.Runtime
                 maxXOffsetFactor: _windowContext.MaxXOffsetFactor,
                 stack: _towerStack);
 
-            var ruleResult = _placementRules.Evaluate(context);
-            if (ruleResult.IsSuccess == false)
+            var initialRules = _placementRules.Evaluate(baseContext);
+            if (initialRules.IsSuccess == false)
             {
-                _session.LastPlacementFailureKey = ruleResult.FailureLocalizationKey;
+                _session.LastPlacementFailureKey = initialRules.FailureLocalizationKey;
                 return false;
             }
 
-            if (TowerPlacementGeometry.TryComputeTarget(context, out var target) == false)
+            var randomizeXOnStack = _towerStack.Count > 0;
+
+            if (TryPickValidTarget(baseContext, randomizeXOnStack, out var target, out var failureKey) == false)
             {
-                _session.LastPlacementFailureKey = "bottom_bar.rule.height_limit_reached";
+                _session.LastPlacementFailureKey = failureKey ?? "bottom_bar.rule.height_limit_reached";
                 return false;
             }
 
@@ -105,6 +111,93 @@ namespace Game.UI.BottomBar.Runtime
 
             _actionInfoOverlay.Show("bottom_bar.action.placed_into_tower");
             return true;
+        }
+
+        private bool TryPickValidTarget(
+            in TowerPlacementRuleContext baseContext,
+            bool randomizeXOnStack,
+            out Vector2 target,
+            out string failureKey)
+        {
+            failureKey = null;
+
+            if (!randomizeXOnStack)
+            {
+                if (TowerPlacementGeometry.TryComputeTarget(baseContext, out target) == false)
+                {
+                    failureKey = "bottom_bar.rule.height_limit_reached";
+                    return false;
+                }
+
+                var res = _placementRules.Evaluate(WithDesiredPivotPos(baseContext, target));
+                if (res.IsSuccess)
+                    return true;
+
+                failureKey = res.FailureLocalizationKey;
+                return false;
+            }
+
+            var top = baseContext.Stack.Top;
+
+            var xMin = top.Target.x - top.Width * baseContext.MaxXOffsetFactor;
+            var xMax = top.Target.x + top.Width * baseContext.MaxXOffsetFactor;
+
+            string lastFailure = null;
+
+            for (var i = 0; i < RandomTargetAttempts; i++)
+            {
+                var candidateX = Random.Range(xMin, xMax);
+
+                var candidateContext = WithDesiredPivotPos(baseContext,
+                    new Vector2(candidateX, baseContext.DesiredPivotPos.y));
+
+                if (TowerPlacementGeometry.TryComputeTarget(candidateContext, out var candidateTarget) == false)
+                {
+                    lastFailure = "bottom_bar.rule.height_limit_reached";
+                    continue;
+                }
+
+                var res = _placementRules.Evaluate(WithDesiredPivotPos(baseContext, candidateTarget));
+                if (res.IsSuccess)
+                {
+                    target = candidateTarget;
+                    return true;
+                }
+
+                lastFailure = res.FailureLocalizationKey;
+            }
+
+            if (TowerPlacementGeometry.TryComputeTarget(baseContext, out target) == false)
+            {
+                failureKey = "bottom_bar.rule.height_limit_reached";
+                return false;
+            }
+
+            var fallbackRes = _placementRules.Evaluate(WithDesiredPivotPos(baseContext, target));
+            if (fallbackRes.IsSuccess)
+                return true;
+
+            failureKey = fallbackRes.FailureLocalizationKey ?? lastFailure;
+            return false;
+        }
+
+        private static TowerPlacementRuleContext WithDesiredPivotPos(
+            in TowerPlacementRuleContext source,
+            Vector2 desiredPivotPos)
+        {
+            return new TowerPlacementRuleContext(
+                screenPoint: source.ScreenPoint,
+                desiredPivotPos: desiredPivotPos,
+                towerRoot: source.TowerRoot,
+                uiCamera: source.UiCamera,
+                draggedColorId: source.DraggedColorId,
+                cubeWidth: source.CubeWidth,
+                cubeHeight: source.CubeHeight,
+                cubePivot: source.CubePivot,
+                isManualPlacement: source.IsManualPlacement,
+                requirePointerBeAboveTop: source.RequirePointerBeAboveTop,
+                maxXOffsetFactor: source.MaxXOffsetFactor,
+                stack: source.Stack);
         }
     }
 }

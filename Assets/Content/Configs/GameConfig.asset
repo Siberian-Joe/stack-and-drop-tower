@@ -57,8 +57,8 @@ MonoBehaviour:
       _sprite: {fileID: 21300000, guid: 85d5e279934def64eb36d7d4aff1b471, type: 3}
   _cubeDrag:
     _maxXOffsetFactor: 0.5
-    _towerFallDuration: 0.25
-    _towerFallEase: 26
+    _towerFallDuration: 0.5
+    _towerFallEase: 30
     _holeEllipsePadding: 0.9
     _holePullDuration: 0.12
     _holePullEase: 6

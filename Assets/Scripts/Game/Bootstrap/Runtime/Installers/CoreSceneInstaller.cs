@@ -10,7 +10,6 @@ using Game.Startup.Contracts;
 using Game.Startup.Runtime;
 using Game.UI.BottomBar.Contracts;
 using Game.UI.BottomBar.Runtime;
-using Game.UI.Screens.Contracts;
 using Game.UI.Screens.Runtime;
 using Zenject;
 
@@ -20,11 +19,32 @@ namespace Game.Bootstrap.Runtime.Installers
     {
         public override void InstallBindings()
         {
+            InstallLifetime();
+
+            InstallSceneReady();
+            InstallSceneStartup();
+
+            InstallGameplayUiContext();
+            InstallBottomBarDragAndDrop();
+
+            InstallTowerPlacementRules();
+            InstallDropActionHandlers();
+
+            InstallProgressSync();
+            InstallSceneReadyListeners();
+            InstallSceneStartupTasks();
+        }
+
+        private void InstallLifetime()
+        {
             Container
                 .Bind<ISceneLifetime>()
                 .FromMethod(_ => new SceneLifetime(this.GetCancellationTokenOnDestroy()))
                 .AsSingle();
+        }
 
+        private void InstallSceneReady()
+        {
             Container
                 .Bind<ISceneReadyGate>()
                 .To<SceneReadyGate>()
@@ -33,7 +53,10 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .BindInterfacesTo<SceneReadyCoordinator>()
                 .AsSingle();
+        }
 
+        private void InstallSceneStartup()
+        {
             Container
                 .Bind<StartupPipeline<ISceneStartupTask>>()
                 .AsSingle();
@@ -46,11 +69,21 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .BindInterfacesTo<StartupRunner<ISceneStartup, ISceneLifetime>>()
                 .AsSingle();
+        }
 
+        private void InstallGameplayUiContext()
+        {
             Container
                 .BindInterfacesTo<GameplayWindowContext>()
                 .AsSingle();
 
+            Container
+                .BindInterfacesAndSelfTo<ActionInfoOverlay>()
+                .AsSingle();
+        }
+
+        private void InstallBottomBarDragAndDrop()
+        {
             Container
                 .BindInterfacesAndSelfTo<BottomBarDragSession>()
                 .AsSingle();
@@ -68,7 +101,10 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .BindInterfacesTo<TowerStackState>()
                 .AsSingle();
+        }
 
+        private void InstallTowerPlacementRules()
+        {
             Container
                 .Bind<ITowerPlacementRulesEvaluator>()
                 .To<TowerPlacementRulesEvaluator>()
@@ -88,12 +124,10 @@ namespace Game.Bootstrap.Runtime.Installers
                 .Bind<ITowerPlacementRule>()
                 .To<MaxHorizontalOffsetRule>()
                 .AsSingle();
+        }
 
-            // Container
-            //     .Bind<ITowerPlacementRule>()
-            //     .To<SameColorAsTopRule>()
-            //     .AsSingle();
-
+        private void InstallDropActionHandlers()
+        {
             Container
                 .Bind<IDropActionHandler>()
                 .To<DropIntoHoleActionHandler>()
@@ -108,7 +142,10 @@ namespace Game.Bootstrap.Runtime.Installers
                 .Bind<IDropActionHandler>()
                 .To<FailDropActionHandler>()
                 .AsSingle();
+        }
 
+        private void InstallProgressSync()
+        {
             Container
                 .BindInterfacesTo<TowerProgressToStoreBridge>()
                 .AsSingle();
@@ -116,10 +153,20 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .BindInterfacesTo<AutoSaveListener>()
                 .AsSingle();
+        }
 
+        private void InstallSceneReadyListeners()
+        {
             Container
                 .Bind<ISceneReadyListener>()
                 .To<CloseLoadingOverlayOnSceneReadyListener>()
+                .AsSingle();
+        }
+
+        private void InstallSceneStartupTasks()
+        {
+            Container
+                .BindInterfacesTo<ShowGameplayWindowTask>()
                 .AsSingle();
 
             Container
@@ -129,14 +176,6 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .Bind<ISceneStartupTask>()
                 .To<RestoreTowerProgressTask>()
-                .AsSingle();
-
-            Container
-                .BindInterfacesTo<ShowGameplayWindowTask>()
-                .AsSingle();
-
-            Container
-                .BindInterfacesAndSelfTo<ActionInfoOverlay>()
                 .AsSingle();
         }
     }

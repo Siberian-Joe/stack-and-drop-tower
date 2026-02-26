@@ -47,14 +47,18 @@ namespace Game.UI.Screens.Runtime.Views
             _sequence?.Kill();
             _canvasGroup.DOKill();
 
-            _canvasGroup.alpha = 0f;
+            var currentAlpha = _canvasGroup.alpha;
 
             _sequence = DOTween.Sequence()
                 .SetTarget(this)
-                .Append(_canvasGroup.DOFade(1f, _fadeInDuration))
-                .AppendInterval(_showDuration)
-                .Append(_canvasGroup.DOFade(0f, _fadeOutDuration))
                 .SetLink(gameObject);
+
+            if (currentAlpha < 1f)
+                _sequence.Append(_canvasGroup.DOFade(1f, _fadeInDuration));
+
+            _sequence
+                .AppendInterval(_showDuration)
+                .Append(_canvasGroup.DOFade(0f, _fadeOutDuration));
         }
 
         private void OnDestroy()

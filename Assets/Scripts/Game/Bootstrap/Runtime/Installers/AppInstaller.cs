@@ -36,17 +36,30 @@ namespace Game.Bootstrap.Runtime.Installers
 
         public override void InstallBindings()
         {
+            InstallLifetime();
+
+            InstallConfig();
+            InstallScenes();
+            InstallProgress();
+
+            InstallScreens();
+            InstallLocalization();
+
+            InstallStartup();
+        }
+
+        private void InstallLifetime()
+        {
             Container
                 .Bind<IAppLifetime>()
                 .FromMethod(_ => new AppLifetime(this.GetCancellationTokenOnDestroy()))
                 .AsSingle();
+        }
 
+        private void InstallConfig()
+        {
             Container
                 .BindInstance(_gameConfig)
-                .AsSingle();
-
-            Container
-                .BindInstance(_sceneCatalog)
                 .AsSingle();
 
             Container
@@ -62,10 +75,12 @@ namespace Game.Bootstrap.Runtime.Installers
                 .Bind<IGameConfigValidator>()
                 .To<GameConfigValidator>()
                 .AsSingle();
+        }
 
+        private void InstallScenes()
+        {
             Container
-                .Bind<ISceneTransitionCurtain>()
-                .To<SceneTransitionCurtain>()
+                .BindInstance(_sceneCatalog)
                 .AsSingle();
 
             Container
@@ -74,6 +89,14 @@ namespace Game.Bootstrap.Runtime.Installers
                 .AsSingle();
 
             Container
+                .Bind<ISceneTransitionCurtain>()
+                .To<SceneTransitionCurtain>()
+                .AsSingle();
+        }
+
+        private void InstallProgress()
+        {
+            Container
                 .BindInterfacesTo<ProgressStore>()
                 .AsSingle();
 
@@ -81,36 +104,10 @@ namespace Game.Bootstrap.Runtime.Installers
                 .Bind<IProgressRepository>()
                 .To<JsonFileProgressRepository>()
                 .AsSingle();
+        }
 
-            Container
-                .Bind<StartupPipeline<IAppStartupTask>>()
-                .AsSingle();
-
-            Container
-                .Bind<IAppStartup>()
-                .To<AppStartup>()
-                .AsSingle();
-
-            Container
-                .BindInterfacesTo<StartupRunner<IAppStartup, IAppLifetime>>()
-                .AsSingle();
-
-            Container
-                .BindInterfacesTo<LoadGameConfigTask>()
-                .AsSingle();
-
-            Container
-                .BindInterfacesTo<LoadProgressTask>()
-                .AsSingle();
-
-            Container
-                .BindInterfacesTo<SwitchToCoreSceneTask>()
-                .AsSingle();
-
-            Container
-                .BindInterfacesTo<ShowLoadingOverlayTask>()
-                .AsSingle();
-
+        private void InstallScreens()
+        {
             Container
                 .Bind<ScreenRoots>()
                 .FromInstance(_screenRootsPrefab)
@@ -121,10 +118,6 @@ namespace Game.Bootstrap.Runtime.Installers
                 .AsSingle();
 
             Container
-                .BindInterfacesTo<SpawnPersistentScreenRootsTask>()
-                .AsSingle();
-
-            Container
                 .Bind<IScreenCatalog>()
                 .FromInstance(_screenCatalog)
                 .AsSingle();
@@ -132,7 +125,10 @@ namespace Game.Bootstrap.Runtime.Installers
             Container
                 .BindInterfacesTo<AddressablesPanelService>()
                 .AsSingle();
+        }
 
+        private void InstallLocalization()
+        {
             Container
                 .BindInstance(_localizationJson)
                 .AsSingle();
@@ -148,6 +144,42 @@ namespace Game.Bootstrap.Runtime.Installers
 
             Container
                 .BindInterfacesTo<LoadLocalizationTask>()
+                .AsSingle();
+        }
+
+        private void InstallStartup()
+        {
+            Container
+                .Bind<StartupPipeline<IAppStartupTask>>()
+                .AsSingle();
+
+            Container
+                .Bind<IAppStartup>()
+                .To<AppStartup>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<StartupRunner<IAppStartup, IAppLifetime>>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<ShowLoadingOverlayTask>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<SpawnPersistentScreenRootsTask>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<LoadGameConfigTask>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<LoadProgressTask>()
+                .AsSingle();
+
+            Container
+                .BindInterfacesTo<SwitchToCoreSceneTask>()
                 .AsSingle();
         }
     }
